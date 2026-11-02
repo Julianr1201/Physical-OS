@@ -7,7 +7,9 @@ The MVP assumes one operator on one computer. The assets are the administrator s
 | Source | Trust |
 | --- | --- |
 | Console on the same machine | The operator, after login |
-| Device names, metadata, MQTT payloads, model output | Untrusted |
+| Microphone and camera | Off until the operator enables them. Frames and samples are not stored |
+| Profile knowledge, manifests, and utterances | Untrusted. A knowledge sentence cannot grant a denied tool |
+| Device names, metadata, MQTT payloads, model output, utterances | Untrusted |
 | Other hosts on the LAN | Untrusted. The API does not listen there by default |
 
 ## Boundaries

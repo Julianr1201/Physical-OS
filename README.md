@@ -16,6 +16,8 @@ The current product is an MVP for a simulated home, plus a real MQTT adapter. It
 - MQTT against a local authenticated broker, with tested topic mapping
 - Software stop latch. It is not a hardware safety system
 - Optional simulated kiosk at `/kiosk`: catalog, QR checkout, verified simulated payment, dispenser, and digital receipt. It is not a cash register and it does not replace the television home
+- Conversational presence at `/presence`: a live point-cloud figure, browser speech when the browser has it, and the same plan approval path. It is not a video avatar
+- Installable professional profiles at `/profiles`: a simulated concierge, sales advisor, and tutor share the presence and the command pipeline. Switching profiles does not rebuild the app
 
 High-risk actuation is denied. Android TV, Home Assistant, Matter and ROS 2 are marked planned.
 
@@ -28,7 +30,7 @@ pnpm install
 pnpm dev
 ```
 
-Abre http://127.0.0.1:3000. La primera vez la pantalla entra sin cuenta en la nube: elige la zona y, si quieres, la casa simulada. La tienda simulada está en `/kiosk`. Los ajustes quedan aparte. La API escucha solo en `127.0.0.1:4747`.
+Abre http://127.0.0.1:3000. La primera vez la pantalla entra sin cuenta en la nube: elige la zona y, si quieres, la casa simulada. La presencia conversacional está en `/presence`. Las profesiones simuladas están en `/profiles`. La tienda simulada está en `/kiosk`. Los ajustes quedan aparte. La API escucha solo en `127.0.0.1:4747`.
 
 Para recuperar el acceso, detén el servidor y ejecuta `pnpm recover-admin`. La contraseña temporal se imprime una vez y las sesiones anteriores quedan revocadas.
 
@@ -63,7 +65,7 @@ An optional broker is in `docker-compose.yml` under the `mqtt` profile. Create `
 
 ## Layout
 
-`apps/server` is the Fastify API. `apps/console` is the Next.js console. Domain packages live in `packages/`: shared models, event bus, adapter contract, simulator, MQTT, automation, policy, intelligence and the core orchestrator. `integrations/` contains planned boundaries only.
+`apps/server` is the Fastify API. `apps/console` is the Next.js console. Domain packages live in `packages/`: shared models, event bus, adapter contract, simulator, MQTT, automation, policy, intelligence, commerce, presence, professional profiles and the core orchestrator. `integrations/` contains planned boundaries only.
 
 ## License
 

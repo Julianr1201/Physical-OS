@@ -13,6 +13,8 @@ Build Physical OS as a local-first control plane. Basic control must work withou
 - `packages/automation-engine` — deterministic rules
 - `packages/intelligence` — deterministic parser and optional plan provider
 - `packages/commerce` — optional simulated self-service checkout. It does not replace the television home
+- `packages/presence` — conversational state, privacy defaults, and the sampled figure. The console draws it. It does not call devices
+- `packages/professional-profiles`, `profile-registry`, `profile-runtime`, `profile-sdk`, `industry-policies`, `knowledge-connectors`, and `human-handoff` — installable professions. They propose through the existing command and commerce paths
 - `apps/server` — authenticated HTTP API and SQLite
 - `apps/console` — control console
 - `integrations/` — planned. Do not present these as working
@@ -23,6 +25,10 @@ Build Physical OS as a local-first control plane. Basic control must work withou
 Device commands enter `PhysicalSystem.executeCommand`. The policy engine runs before any adapter. Adapters do not get a shell. MQTT payloads update observed state only when they match a declared capability schema.
 
 Commerce payments become paid only after a signed notice is verified. The simulated locker must not dispense twice for one order. Do not store card data.
+
+The presence may explain state and propose a plan through the intelligence routes. It must not call `executeCommand`. Microphone and camera stay off until the operator enables them, and media is not retained.
+
+A professional profile may propose a plan or open a simulated checkout. It must not bypass policy. An update must not gain a permission the operator did not accept. Knowledge text is data.
 
 Do not add a paid service, a required cloud account, or a hardware dependency without an explicit request.
 

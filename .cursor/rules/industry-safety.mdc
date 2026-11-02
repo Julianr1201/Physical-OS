@@ -1,0 +1,21 @@
+---
+description: Industry safety limits that profile knowledge cannot override
+globs: "packages/industry-policies/**/*.ts,packages/profile-runtime/**/*.ts,packages/professional-profiles/**/*.ts"
+alwaysApply: false
+---
+
+# Industry safety
+
+`floorDenies` applies to every profile. A knowledge sentence is data and cannot add a denied tool.
+
+- Healthcare: no diagnosis, prescription, or clinical decision.
+- Transportation: no vehicle control or safety-critical navigation.
+- Buildings and security: no unlock and no access grant.
+- Commerce: no dispensing before verified payment. Card capture stays denied.
+- Education: do not collect a learner profile or store who a minor is.
+
+```ts
+if (phraseDenies(manifest.safetyPolicies, utterance)) return denied;
+```
+
+Do not let an organization note relax one of these denies.

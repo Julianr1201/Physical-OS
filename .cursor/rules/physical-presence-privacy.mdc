@@ -1,0 +1,21 @@
+---
+description: Microphone and camera limits for the conversational presence
+globs: "packages/presence/**/*.ts,apps/console/src/components/presence/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Presence privacy
+
+The microphone and the camera start off. `retainMedia` stays false.
+
+- Show a visible indicator whenever either device is live.
+- Camera gaze is optional and must have a control that turns it fully off.
+- Camera samples stay in memory for one frame. Do not record, upload, or infer an emotion from them.
+- If speech recognition or synthesis is missing, say so. Do not invent a transcript or spoken audio.
+
+```ts
+const privacy = defaultPrivacy();
+if (privacy.cameraGaze || privacy.retainMedia) throw new Error('privacy_default');
+```
+
+Do not open a capture device from the television home or from a test.

@@ -17,6 +17,7 @@ import { mqttConnectionSchema } from '@physical-os/adapter-mqtt';
 import { CommerceService } from '@physical-os/commerce';
 import { clearCookie, hashPassword, hashToken, newSessionToken, readCookie, sessionCookie, verifyPassword } from './auth.js';
 import { registerCommerceRoutes, sendCommerceError } from './commerce-routes.js';
+import { registerProfileRoutes, sendProfileError } from './profile-routes.js';
 import { AppDatabase } from './db/database.js';
 import { openApi } from './openapi.js';
 
@@ -108,6 +109,7 @@ export async function buildApp(options: BuildOptions) {
       return reply.code(error.httpStatus).send({ error: { code: error.code, message: error.message, details: error.details ?? null } });
     }
     if (sendCommerceError(error, reply)) return;
+    if (sendProfileError(error, reply)) return;
     if (error instanceof z.ZodError) {
       return reply.code(422).send({
         error: { code: 'invalid_body', message: 'The request body is invalid.', details: error.issues.map((issue) => issue.message) },
@@ -445,7 +447,9 @@ export async function buildApp(options: BuildOptions) {
     return undefined;
   });
 
-  registerCommerceRoutes(app, new CommerceService(), requireActor, origins);
+  const commerce = new CommerceService();
+  registerCommerceRoutes(app, commerce, requireActor, origins);
+  registerProfileRoutes(app, commerce, requireActor);
 
   return { app, system, database };
 }

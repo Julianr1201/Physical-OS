@@ -1,0 +1,20 @@
+---
+description: Installable professional profiles share the presence and the command pipeline
+globs: "packages/professional-profiles/**/*.ts,packages/profile-*/**/*.ts,packages/industry-policies/**/*.ts,packages/knowledge-connectors/**/*.ts,packages/human-handoff/**/*.ts,apps/server/src/profile-routes.ts,apps/console/src/components/profiles/**/*.tsx"
+alwaysApply: false
+---
+
+# Professional profiles
+
+A profession is a versioned manifest in the catalog or a signed package. Do not add it as a closed enum or as a second application.
+
+- Keep identity separate from the figure and the voice. The active session must show the role and say it is an AI professional.
+- Install, update, activate, roll back, and remove through `ProfileRegistry`.
+- Bundled starters install only in simulation. Production requires `verifyManifest`.
+- An update that adds a permission throws `permission_grant_required` until that permission is accepted.
+
+```ts
+if (added.some((item) => !accepted.includes(item))) throw new ProfileError('permission_grant_required', 'Accept the new permissions.', 409);
+```
+
+Do not rebuild the console to switch profiles.

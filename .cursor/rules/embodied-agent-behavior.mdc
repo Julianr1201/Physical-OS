@@ -1,0 +1,21 @@
+---
+description: How an embodied professional behaves in the presence
+globs: "packages/profile-runtime/**/*.ts,apps/console/src/components/profiles/**/*.tsx,apps/console/src/components/presence/**/*.tsx"
+alwaysApply: false
+---
+
+# Embodied professional behavior
+
+The figure stays the point-cloud presence. The profile changes the role label, the disclosure, the greeting, and the pace. It does not change the person into a costume or a stereotype.
+
+- Say that the speaker is an AI professional.
+- A device proposal stays `executed: false` until interpret and approve run it.
+- A checkout opens an order and waits for verified payment before dispensing.
+- Hand off billing disputes, clinical questions, access requests, and requests for a learner’s identity.
+- Keep the answer inside the approved sources. When a note is stale, say the uncertainty.
+
+```ts
+proposal: { kind: 'device', utterance, executed: false }
+```
+
+Do not call `executeCommand` from the profile runtime.

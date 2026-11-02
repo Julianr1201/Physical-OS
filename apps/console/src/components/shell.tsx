@@ -104,7 +104,7 @@ export function Shell({ children }: { children: ReactNode }) {
   }
 
   const simulated = overview?.environments.some((environment) => environment.simulated) ?? false;
-  const stage = pathname === '/';
+  const stage = pathname === '/' || pathname === '/presence' || pathname === '/profiles';
 
   return (
     <FrameContext.Provider value={value}>

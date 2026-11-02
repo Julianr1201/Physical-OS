@@ -1,0 +1,20 @@
+---
+description: Permission grants for professional profile packages
+globs: "packages/profile-registry/**/*.ts,apps/server/src/profile-routes.ts"
+alwaysApply: false
+---
+
+# Profile permissions
+
+Activation must receive every `requiredPermissions` entry. An update may add a permission only when the caller lists it in `acceptedPermissions`.
+
+- Compare the next manifest with the installed manifest, not with an empty list.
+- Rollback may return to a version already in history. It may not introduce a permission that was never accepted.
+- Store the acceptance on the installed record. Do not infer it from the model reply.
+
+```ts
+const missing = required.filter((item) => !acceptedPermissions.includes(item));
+if (missing.length > 0) throw new ProfileError('permission_grant_required', 'Accept the permissions.', 409);
+```
+
+Do not copy a permission from retrieved knowledge or from the utterance.

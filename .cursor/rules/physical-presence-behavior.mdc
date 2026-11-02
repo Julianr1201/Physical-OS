@@ -1,0 +1,21 @@
+---
+description: Behavioral states for the conversational presence
+globs: "packages/presence/**/*.ts,apps/console/src/components/presence/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Presence behavior
+
+Drive the figure from `reduceTurn`. States are `DORMANT`, `AWAKENING`, `IDLE`, `LISTENING`, `THINKING`, `SPEAKING`, `ACTING`, `ERROR`, and `SLEEPING`.
+
+- Ignore a reply whose generation does not match the current turn.
+- Interrupting speech cancels audio and returns to `LISTENING`.
+- Do not interrupt an approval that has already started.
+- Expressions are visual states. Idle stays `neutral`. Use `pleased` only after every command is `verified`.
+- Device actions go through interpret and approve. The figure must not call `executeCommand`.
+
+```ts
+if (turn.state !== 'THINKING' || event.generation !== turn.generation) return same(turn);
+```
+
+Do not hold a smile or a fixed stare across states. Do not claim the figure feels an emotion.

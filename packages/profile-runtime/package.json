@@ -1,0 +1,15 @@
+{
+  "name": "@physical-os/profile-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@physical-os/human-handoff": "workspace:*",
+    "@physical-os/industry-policies": "workspace:*",
+    "@physical-os/knowledge-connectors": "workspace:*",
+    "@physical-os/professional-profiles": "workspace:*",
+    "@physical-os/profile-registry": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.8.3" }
+}

@@ -13,6 +13,7 @@
     "@physical-os/commerce": "workspace:*",
     "@physical-os/core": "workspace:*",
     "@physical-os/intelligence": "workspace:*",
+    "@physical-os/profile-sdk": "workspace:*",
     "@physical-os/shared": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "fastify": "^5.4.0",

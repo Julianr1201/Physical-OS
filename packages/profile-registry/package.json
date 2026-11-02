@@ -1,0 +1,12 @@
+{
+  "name": "@physical-os/profile-registry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@physical-os/industry-policies": "workspace:*",
+    "@physical-os/professional-profiles": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.8.3" }
+}

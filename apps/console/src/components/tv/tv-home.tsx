@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { api, type CommandResult, type Device, type Overview } from '@/lib/api';
 import { useFrame } from '@/components/shell';
@@ -157,6 +158,7 @@ function FirstRun({
 }
 
 function Stage({ tv }: { tv: TvCopy }) {
+  const router = useRouter();
   const { overview, locale, refresh, error } = useFrame();
   const [now, setNow] = useState<Date | null>(null);
   const [overlay, setOverlay] = useState<Overlay>('none');
@@ -263,7 +265,8 @@ function Stage({ tv }: { tv: TvCopy }) {
           </button>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-4">
-          <FocusButton id="assist" onClick={() => { setUtterance(''); setPlanId(null); setAssistant(null); open('assistant', 'ask'); }}>{tv.ask}</FocusButton>
+          <FocusButton id="assist" onClick={() => router.push('/presence')}>{tv.ask}</FocusButton>
+          <FocusButton id="profiles" onClick={() => router.push('/profiles')}>{tv.profiles}</FocusButton>
           {lights.length > 0 ? <FocusButton id="lights" onClick={() => open('lights', lights[0] ? `light-${lights[0].id}` : 'all-off')}>{tv.lights}</FocusButton> : null}
           {climate ? <FocusButton id="climate" onClick={() => open('climate', 'climate-close')}>{tv.climate}</FocusButton> : null}
         </div>
@@ -561,6 +564,7 @@ function stageItems(lights: boolean, climate: boolean): FocusItem[] {
     { id: 'nav-settings', row: 0, col: 4 },
     { id: 'media', row: 1, col: 0 },
     { id: 'assist', row: 2, col: 0 },
+    { id: 'profiles', row: 2, col: 3 },
   ];
   if (lights) items.push({ id: 'lights', row: 2, col: 1 });
   if (climate) items.push({ id: 'climate', row: 2, col: 2 });
