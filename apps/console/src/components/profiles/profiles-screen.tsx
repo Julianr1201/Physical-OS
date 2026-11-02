@@ -137,12 +137,12 @@ export function ProfilesScreen() {
     setMessage(null);
     setOrder(null);
     try {
-      const result = await api<{ plan: Plan; commerce: { orderId: string; status: string; dispenseVerified: boolean } | null }>('/api/v1/profiles/turn', {
+      const result = await api<{ plan: Plan; commerce: { orderId: string; status: string; dispenseVerified: boolean } | null; operation: { stage: string } | null }>('/api/v1/profiles/turn', {
         method: 'POST',
         body: JSON.stringify({ utterance: text }),
       });
       setPlan(result.plan);
-      setOrder(result.commerce ? `${result.commerce.status} · ${result.commerce.orderId}` : null);
+      setOrder(result.commerce ? `${result.operation?.stage ?? ''} · ${result.commerce.status} · ${result.commerce.orderId}` : null);
       if (result.plan.proposal?.kind === 'device' && result.plan.proposal.utterance && frame.overview?.environments[0]) {
         await api('/api/v1/intelligence/interpret', {
           method: 'POST',
@@ -150,6 +150,28 @@ export function ProfilesScreen() {
         });
         setMessage(copy.proposed);
       }
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : copy.unavailable);
+    }
+  }
+
+  async function confirmPurchase() {
+    setMessage(null);
+    try {
+      const result = await api<{ plan: Plan; commerce: { orderId: string; status: string } | null; operation: { stage: string } | null }>('/api/v1/profiles/confirm', { method: 'POST' });
+      setPlan(result.plan);
+      setOrder(result.commerce ? `${result.operation?.stage ?? ''} · ${result.commerce.status} · ${result.commerce.orderId}` : null);
+    } catch (error) {
+      setMessage(error instanceof ApiError ? error.message : copy.unavailable);
+    }
+  }
+
+  async function cancelPurchase() {
+    setMessage(null);
+    try {
+      const result = await api<{ plan: Plan; commerce: { orderId: string; status: string } | null; operation: { stage: string } | null }>('/api/v1/profiles/cancel', { method: 'POST' });
+      setPlan(result.plan);
+      setOrder(result.commerce ? `${result.operation?.stage ?? ''} · ${result.commerce.status} · ${result.commerce.orderId}` : result.plan.text[locale]);
     } catch (error) {
       setMessage(error instanceof ApiError ? error.message : copy.unavailable);
     }
@@ -263,6 +285,8 @@ export function ProfilesScreen() {
           suggestions={samples[profile.profileId] ?? [profile.tone.greeting.en]}
           onUtterance={setUtterance}
           onRun={(text) => void runActive(text)}
+          onConfirm={() => void confirmPurchase()}
+          onCancel={() => void cancelPurchase()}
           onNext={() => setStep(0)}
           nextLabel={copy.switchProfile}
         />
@@ -281,6 +305,8 @@ function TestBox({
   suggestions,
   onUtterance,
   onRun,
+  onConfirm,
+  onCancel,
   onNext,
   nextLabel,
 }: {
@@ -293,6 +319,8 @@ function TestBox({
   suggestions: string[];
   onUtterance: (value: string) => void;
   onRun: (text: string) => void;
+  onConfirm?: () => void;
+  onCancel?: () => void;
   onNext: () => void;
   nextLabel?: string;
 }) {
@@ -315,6 +343,12 @@ function TestBox({
           {plan.knowledge[0] ? <p className="text-lg">{plan.knowledge[0].provenance}</p> : null}
           {plan.proposal ? <p className="text-lg">{plan.proposal.kind}{plan.proposal.target ? ` · ${plan.proposal.target}` : ''}{plan.proposal.sku ? ` · ${plan.proposal.sku}` : ''}</p> : null}
           {order ? <p className="text-lg">{order}</p> : null}
+          {plan.proposal?.kind === 'checkout' && onConfirm ? (
+            <div className="mt-3 flex gap-3">
+              <button type="button" className="bg-[var(--surface-raised)] px-4 py-3 text-lg" onClick={onConfirm}>{copy.confirm}</button>
+              {onCancel ? <button type="button" className="px-4 py-3 text-lg" onClick={onCancel}>{copy.cancel}</button> : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
       <button type="button" className="px-5 py-4 text-left text-xl" onClick={onNext}>{nextLabel ?? copy.activate}</button>
@@ -339,6 +373,8 @@ const english = {
   activate: 'Activate',
   switchProfile: 'Choose another',
   proposed: 'The device action was sent for approval. It has not run.',
+  confirm: 'Confirm order',
+  cancel: 'Cancel',
   unavailable: 'The profile service is unavailable.',
   steps: ['Industry', 'Profession', 'Specialization', 'Appearance', 'Systems', 'Permissions', 'Test', 'Active'],
 };
@@ -360,6 +396,8 @@ const spanish = {
   activate: 'Activar',
   switchProfile: 'Elegir otro',
   proposed: 'La acción del dispositivo quedó para aprobación. No se ejecutó.',
+  confirm: 'Confirmar pedido',
+  cancel: 'Cancelar',
   unavailable: 'El servicio de perfiles no está disponible.',
   steps: ['Industria', 'Profesión', 'Especialización', 'Apariencia', 'Sistemas', 'Permisos', 'Prueba', 'Activo'],
 };

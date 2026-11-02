@@ -15,7 +15,7 @@ export interface ProfilePlan {
   proposal:
     | null
     | { kind: 'device'; utterance: string; executed: false }
-    | { kind: 'checkout'; sku: 'water' | 'coffee' | 'snack'; qty: 1; executed: false }
+    | { kind: 'checkout'; sku: 'water' | 'coffee' | 'snack'; qty: 1; executed: false; proposalId?: string }
     | { kind: 'handoff'; target: string; reason: string; executed: false }
     | { kind: 'practice'; prompt: { en: string; es: string }; executed: false };
   denied: string | null;
@@ -67,12 +67,25 @@ export function planTurn(
       uncertainty: 'stated',
     });
   }
-  const sku = skuFrom(utterance);
-  if (hasTool(manifest, 'checkout') && sku && wantsToBuy(utterance)) {
+  const skus = skusIn(utterance);
+  if (hasTool(manifest, 'checkout') && wantsToBuy(utterance)) {
+    const sku = skus[0];
+    if (skus.length !== 1 || !sku || asksPrice(utterance)) {
+      return plan(manifest, avatarId, voicePreset, {
+        text: {
+          en: 'I need one product and a clear purchase request before I propose a checkout.',
+          es: 'Necesito un solo producto y un pedido claro antes de proponer un cobro.',
+        },
+        knowledge,
+        proposal: null,
+        denied: null,
+        uncertainty: 'partial',
+      });
+    }
     return plan(manifest, avatarId, voicePreset, {
       text: {
-        en: `I can open a simulated checkout for ${sku}. Nothing is dispensed before payment is verified.`,
-        es: `Puedo abrir un cobro simulado de ${sku}. No se entrega nada antes de verificar el pago.`,
+        en: `I can propose a simulated checkout for ${sku}. Confirm it before I create an order. Nothing is dispensed before payment is verified.`,
+        es: `Puedo proponer un cobro simulado de ${sku}. Confírmalo antes de crear el pedido. No se entrega nada antes de verificar el pago.`,
       },
       knowledge,
       proposal: { kind: 'checkout', sku, qty: 1, executed: false },
@@ -149,10 +162,15 @@ function wantsToBuy(utterance: string): boolean {
   return /want|quiero|buy|comprar|order|pedir|dame/.test(utterance.toLowerCase());
 }
 
-function skuFrom(utterance: string): 'water' | 'coffee' | 'snack' | null {
+function asksPrice(utterance: string): boolean {
+  return /how much|cu[aá]nto|precio|price|cuesta/.test(utterance.toLowerCase());
+}
+
+function skusIn(utterance: string): Array<'water' | 'coffee' | 'snack'> {
   const text = utterance.toLowerCase();
-  if (text.includes('coffee') || text.includes('café') || text.includes('cafe')) return 'coffee';
-  if (text.includes('water') || text.includes('agua')) return 'water';
-  if (text.includes('snack')) return 'snack';
-  return null;
+  const found: Array<'water' | 'coffee' | 'snack'> = [];
+  if (text.includes('coffee') || text.includes('café') || text.includes('cafe')) found.push('coffee');
+  if (text.includes('water') || text.includes('agua')) found.push('water');
+  if (text.includes('snack')) found.push('snack');
+  return found;
 }

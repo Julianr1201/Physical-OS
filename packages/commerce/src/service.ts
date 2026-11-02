@@ -58,26 +58,26 @@ export class CommerceService {
   }
 
   checkout(lines: Array<{ sku: string; qty: number }>): { order: CustomerOrder; session: PaymentSession; payToken: string } {
+    const held = this.holdOrder(lines);
+    return this.openPayment(held.id);
+  }
+
+  holdOrder(lines: Array<{ sku: string; qty: number }>): CustomerOrder {
     const priced = priceLines(this.catalog, lines);
     const reservations = priced.items.map((item) => this.inventory.reserve(item.sku, item.qty));
-    const created = this.order(priced.items, priced.totalCents, reservations.map((item) => item.id));
-    this.move(created, 'AWAITING_PAYMENT');
-    const session: PaymentSession = {
-      id: randomUUID(),
-      orderId: created.id,
-      amountCents: created.totalCents,
-      currency: 'MXN',
-      expiresAt: new Date(this.now().getTime() + SESSION_MS).toISOString(),
-      mode: 'simulation',
-      method: 'dynamic_qr',
-      nfc: this.provider.nfcStatus(),
-    };
-    const payToken = randomBytes(32).toString('base64url');
-    this.sessions.set(session.id, session);
-    this.tokens.set(created.id, createHash('sha256').update(payToken).digest('hex'));
-    created.paymentSessionId = session.id;
-    this.note(created, 'payment.session', 'simulation_qr');
-    return { order: this.view(created), session, payToken };
+    return this.view(this.order(priced.items, priced.totalCents, reservations.map((item) => item.id)));
+  }
+
+  openPayment(orderId: string): { order: CustomerOrder; session: PaymentSession; payToken: string } {
+    const order = this.expire(this.require(orderId));
+    if (order.status === 'AWAITING_PAYMENT' && order.paymentSessionId) {
+      const session = this.sessions.get(order.paymentSessionId);
+      if (!session) throw new CommerceError('unknown_order', 'Payment session not found.', 404);
+      return { order: this.view(order), session, payToken: '' };
+    }
+    if (order.status !== 'CREATED') throw new CommerceError('payment_blocked', 'Payment can start only from a created order.', 409);
+    this.move(order, 'AWAITING_PAYMENT');
+    return this.attachPayment(order);
   }
 
   getOrder(orderId: string): CustomerOrder {
@@ -297,6 +297,25 @@ export class CommerceService {
     const order = this.orders.get(orderId);
     if (!order) throw new CommerceError('unknown_order', 'Order not found.', 404);
     return order;
+  }
+
+  private attachPayment(order: CustomerOrder): { order: CustomerOrder; session: PaymentSession; payToken: string } {
+    const session: PaymentSession = {
+      id: randomUUID(),
+      orderId: order.id,
+      amountCents: order.totalCents,
+      currency: 'MXN',
+      expiresAt: new Date(this.now().getTime() + SESSION_MS).toISOString(),
+      mode: 'simulation',
+      method: 'dynamic_qr',
+      nfc: this.provider.nfcStatus(),
+    };
+    const payToken = randomBytes(32).toString('base64url');
+    this.sessions.set(session.id, session);
+    this.tokens.set(order.id, createHash('sha256').update(payToken).digest('hex'));
+    order.paymentSessionId = session.id;
+    this.note(order, 'payment.session', 'simulation_qr');
+    return { order: this.view(order), session, payToken };
   }
 
   private view(order: CustomerOrder): CustomerOrder {

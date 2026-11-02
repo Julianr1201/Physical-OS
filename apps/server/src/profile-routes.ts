@@ -24,15 +24,40 @@ export function registerProfileRoutes(
 ): ProfileHost {
   const host = new ProfileHost({
     mode: 'simulation',
-    checkout: (sku, qty) => {
-      const created = commerce.checkout([{ sku, qty }]);
-      return {
-        orderId: created.order.id,
-        status: created.order.status,
-        paymentCaptured: created.order.paymentCaptured,
-        dispenseVerified: created.order.dispenseVerified,
-        simulated: true,
-      };
+    purchase: {
+      createOrder: (sku, qty) => {
+        const order = commerce.holdOrder([{ sku, qty }]);
+        return {
+          orderId: order.id,
+          status: order.status,
+          paymentCaptured: order.paymentCaptured,
+          dispenseVerified: order.dispenseVerified,
+          simulated: true,
+          stage: 'order_created',
+        };
+      },
+      startPayment: (orderId) => {
+        const opened = commerce.openPayment(orderId);
+        return {
+          orderId: opened.order.id,
+          status: opened.order.status,
+          paymentCaptured: opened.order.paymentCaptured,
+          dispenseVerified: opened.order.dispenseVerified,
+          simulated: true,
+          stage: 'payment_started',
+        };
+      },
+      cancelOrder: (orderId) => {
+        const order = commerce.cancel(orderId);
+        return {
+          orderId: order.id,
+          status: order.status,
+          paymentCaptured: order.paymentCaptured,
+          dispenseVerified: order.dispenseVerified,
+          simulated: true,
+          stage: 'cancelled',
+        };
+      },
     },
   });
 
@@ -119,7 +144,19 @@ export function registerProfileRoutes(
     await requireActor(request);
     const body = turnSchema.parse(request.body);
     const result = host.turn(body.utterance);
-    return { data: { simulated: true, plan: result.plan, commerce: result.commerce, metrics: result.metrics } };
+    return { data: { simulated: true, plan: result.plan, commerce: result.commerce, operation: result.operation, metrics: result.metrics } };
+  });
+
+  app.post('/api/v1/profiles/confirm', async (request) => {
+    await requireActor(request);
+    const result = host.confirm();
+    return { data: { simulated: true, plan: result.plan, commerce: result.commerce, operation: result.operation, metrics: result.metrics } };
+  });
+
+  app.post('/api/v1/profiles/cancel', async (request) => {
+    await requireActor(request);
+    const result = host.cancel();
+    return { data: { simulated: true, plan: result.plan, commerce: result.commerce, operation: result.operation, metrics: result.metrics } };
   });
 
   return host;

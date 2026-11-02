@@ -24,7 +24,7 @@ Bundled starters install only when the registry is in simulation. A production r
 
 ## What a turn may do
 
-A turn may answer from an approved source, propose a device utterance, open a simulated checkout, or hand off to a person. A device proposal stays `executed: false` until the existing interpret and approve routes run it. A checkout creates an order through the commerce service and does not dispense before verified payment.
+A turn may answer from an approved source, propose a device utterance, propose a simulated checkout, or hand off to a person. A device proposal stays `executed: false` until the existing interpret and approve routes run it. A checkout proposal does not create an order. `POST /api/v1/profiles/confirm` creates the order and then starts payment. Dispensing still waits for a verified payment in the commerce service. See `docs/architecture/mvp-audit.md`.
 
 Healthcare profiles do not diagnose or prescribe. Transportation profiles do not drive. Building profiles do not unlock. Education profiles do not store a learner identity. The floor denies apply even when a profile omits them.
 

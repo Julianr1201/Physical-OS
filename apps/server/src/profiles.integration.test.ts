@@ -62,11 +62,22 @@ describe('professional profiles', () => {
     expect(unpaid.json().data.plan.denied).toBe('dispense_unpaid');
     expect(unpaid.json().data.commerce).toBeNull();
     const coffee = await turn(app, cookie, 'I want a coffee.');
-    expect(coffee.json().data.commerce.paymentCaptured).toBe(false);
-    expect(coffee.json().data.commerce.dispenseVerified).toBe(false);
+    expect(coffee.json().data.commerce).toBeNull();
+    expect(coffee.json().data.operation.stage).toBe('proposed');
+    const price = await turn(app, cookie, 'How much is coffee?');
+    expect(price.json().data.commerce).toBeNull();
+    expect(price.json().data.plan.proposal).toBeNull();
+    const again = await turn(app, cookie, 'I want a coffee.');
+    expect(again.json().data.operation.stage).toBe('proposed');
+    const confirmed = await app.inject({ method: 'POST', url: '/api/v1/profiles/confirm', headers: { cookie } });
+    expect(confirmed.json().data.commerce.paymentCaptured).toBe(false);
+    expect(confirmed.json().data.commerce.dispenseVerified).toBe(false);
+    expect(confirmed.json().data.operation.stage).toBe('payment_started');
+    const duplicate = await app.inject({ method: 'POST', url: '/api/v1/profiles/confirm', headers: { cookie } });
+    expect(duplicate.json().data.commerce.orderId).toBe(confirmed.json().data.commerce.orderId);
     const paid = await app.inject({
       method: 'POST',
-      url: `/api/v1/commerce/orders/${coffee.json().data.commerce.orderId}/pay-simulation`,
+      url: `/api/v1/commerce/orders/${confirmed.json().data.commerce.orderId}/pay-simulation`,
       headers: { cookie },
     });
     expect(paid.json().data.dispenseVerified).toBe(true);

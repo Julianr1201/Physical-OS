@@ -168,18 +168,21 @@ describe('presence privacy and performance', () => {
     const head = span(figure, figureKind.head, 0);
     expect(eyes).toBeLessThan(head);
     expect(meanAxis(figure, figureKind.eye, 2)).toBeGreaterThan(meanAxis(figure, figureKind.torso, 2));
+    expect(meanAxis(figure, figureKind.hand, 2)).toBeGreaterThan(meanAxis(figure, figureKind.torso, 2));
+    expect(meanAxis(figure, figureKind.hair, 2)).toBeLessThan(meanAxis(figure, figureKind.head, 2));
+    expect(meanAxis(figure, figureKind.ring, 1)).toBeLessThan(meanAxis(figure, figureKind.torso, 1));
     let left = false;
     let right = false;
     for (let index = 0; index < figure.count; index += 1) {
       if ((figure.kind[index] ?? 0) !== figureKind.eye) continue;
       const x = figure.positions[index * 3] ?? 0;
-      if (x > 0.1) right = true;
-      if (x < -0.1) left = true;
+      if (x > 0.03) right = true;
+      if (x < -0.03) left = true;
       expect(Number.isFinite(x)).toBe(true);
     }
     expect(left && right).toBe(true);
     const face = sampleFigure(800, { body: false });
-    expect([...face.kind].some((kind) => kind === figureKind.torso || kind === figureKind.arm)).toBe(false);
+    expect([...face.kind].some((kind) => kind === figureKind.torso || kind === figureKind.arm || kind === figureKind.hand || kind === figureKind.ring)).toBe(false);
   });
 
   it('maps intelligence results without treating a delivery as verified', () => {

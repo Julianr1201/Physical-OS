@@ -45,25 +45,26 @@ void main() {
   vShade = normal.z < 0.0 ? 0.48 + fill * 0.15 : 0.62 + key * 0.38 + fill * 0.08;
 
   if (aKind < 0.5) {
-    float brow = smoothstep(0.18, 0.42, instanceOffset.y) * (1.0 - min(1.0, abs(instanceOffset.x) * 2.2));
-    p.y += brow * uBrow * 0.035;
+    float brow = smoothstep(0.52, 0.56, instanceOffset.y) * (1.0 - smoothstep(0.58, 0.64, instanceOffset.y));
+    brow *= 1.0 - min(1.0, abs(instanceOffset.x) * 8.0);
+    p.y += brow * uBrow * 0.02;
   }
   if (aKind > 0.5 && aKind < 1.5) {
-    p.x += uGaze.x * 0.03;
-    p.y += uGaze.y * 0.02;
+    p.x += uGaze.x * 0.012;
+    p.y += uGaze.y * 0.008;
     vShade = 1.0;
   }
-  if (aKind > 1.5 && aKind < 2.5) p.y -= uBlink * 0.055;
-  if (aKind > 2.5 && aKind < 3.5) p.y += aSide * uMouth * 0.055;
-  if (aKind > 4.5 && aSide > 0.0) {
-    vec3 pivot = vec3(0.46, -0.86, 0.02);
-    float qx = p.x - pivot.x;
-    float qy = p.y - pivot.y;
-    float ang = uGesture * 1.2;
+  if (aKind > 1.5 && aKind < 2.5) p.y -= uBlink * 0.018;
+  if (aKind > 2.5 && aKind < 3.5) p.y += aSide * uMouth * 0.02;
+  if ((aKind > 4.5 && aKind < 5.5 && aSide > 0.0) || (aKind > 6.5 && aKind < 7.5 && aSide > 0.0)) {
+    vec3 pivot = vec3(-0.32, 0.16, 0.08);
+    vec3 q = p - pivot;
+    float ang = uGesture * 0.18;
     float c = cos(ang);
     float s = sin(ang);
-    p.x = qx * c - qy * s + pivot.x;
-    p.y = qx * s + qy * c + pivot.y;
+    p.x = q.x + pivot.x;
+    p.y = q.y * c - q.z * s + pivot.y;
+    p.z = q.y * s + q.z * c + pivot.z;
   }
   p += sin(uTime * 0.67 + instanceOffset.y * 7.0 + instanceOffset.x * 5.0) * 0.0032 * uEnergy;
 
@@ -90,8 +91,9 @@ void main() {
   if (dist > 0.5) discard;
   float alpha = smoothstep(0.5, 0.12, dist) * uOpacity;
   vec3 color = mix(uDepth, uPrimary, clamp(vShade, 0.0, 1.0));
-  if (vKind > 0.5 && vKind < 1.5) color = mix(uWarm, uSecondary, 0.35);
-  else if (vKind > 2.5 && vKind < 3.5) color = uSecondary;
+  if (vKind > 0.5 && vKind < 1.5) color = mix(uDepth, uSecondary, 0.55);
+  else if (vKind > 2.5 && vKind < 3.5) color = mix(uSecondary, uWarm, 0.28);
+  else if (vKind > 7.5) color = mix(uPrimary, uSecondary, 0.45);
   gl_FragColor = vec4(color * (0.75 + vShade * 0.25), alpha);
 }
 `;
@@ -122,8 +124,15 @@ export function PresenceFigure({
   const reported = useRef(false);
   const bodyEnabled = tier !== 'low';
   const sampled = useMemo(() => sampleFigure(tier === 'high' ? 8000 : tier === 'medium' ? 3600 : 1400, { body: bodyEnabled }), [tier, bodyEnabled]);
-  const headSample = useMemo(() => sliceFigure(sampled, (kind) => kind < figureKind.torso), [sampled]);
-  const bodySample = useMemo(() => sliceFigure(sampled, (kind) => kind >= figureKind.torso), [sampled]);
+  const headSample = useMemo(
+    () => sliceFigure(sampled, (kind) => kind < figureKind.torso || kind === figureKind.hair),
+    [sampled],
+  );
+  const bodySample = useMemo(
+    () => sliceFigure(sampled, (kind) => kind === figureKind.torso || kind === figureKind.arm || kind === figureKind.hand),
+    [sampled],
+  );
+  const ringSample = useMemo(() => sliceFigure(sampled, (kind) => kind === figureKind.ring), [sampled]);
   const material = useMemo(() => createMaterial(tier), [tier]);
   const uniforms = material.uniforms as {
     uTime: { value: number };
@@ -186,6 +195,7 @@ export function PresenceFigure({
           <Cloud sample={bodySample} material={material} />
         </group>
       ) : null}
+      {ringSample.count > 0 ? <Cloud sample={ringSample} material={material} /> : null}
     </group>
   );
 }
@@ -220,7 +230,7 @@ function createMaterial(tier: PerformanceTier): THREE.ShaderMaterial {
       uEnergy: { value: 0.4 },
       uBrow: { value: 0 },
       uOpacity: { value: 0.4 },
-      uSize: { value: tier === 'high' ? 0.018 : tier === 'medium' ? 0.024 : 0.034 },
+      uSize: { value: tier === 'high' ? 0.01 : tier === 'medium' ? 0.014 : 0.022 },
       uPrimary: { value: new THREE.Color('#B5D7D2') },
       uSecondary: { value: new THREE.Color('#DCEAF0') },
       uDepth: { value: new THREE.Color('#5E859A') },

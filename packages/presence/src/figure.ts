@@ -5,6 +5,9 @@ export const figureKind = {
   mouth: 3,
   torso: 4,
   arm: 5,
+  hair: 6,
+  hand: 7,
+  ring: 8,
 } as const;
 
 export interface FigureSample {
@@ -34,6 +37,7 @@ export function sampleFigure(count: number, options?: { body?: boolean }): Figur
   };
 
   for (let index = 0; index < parts.head; index += 1) write(headPoint(index, parts.head), figureKind.head, 0);
+  for (let index = 0; index < parts.hair; index += 1) write(hairPoint(index, parts.hair, random), figureKind.hair, 0);
   for (let index = 0; index < parts.eye; index += 1) {
     const facing = index % 2 === 0 ? 1 : -1;
     write(eyePoint(facing, random), figureKind.eye, facing);
@@ -48,9 +52,14 @@ export function sampleFigure(count: number, options?: { body?: boolean }): Figur
   }
   for (let index = 0; index < parts.torso; index += 1) write(torsoPoint(random), figureKind.torso, 0);
   for (let index = 0; index < parts.arm; index += 1) {
-    const facing = index % 2 === 0 ? 1 : -1;
+    const facing = index % 5 === 0 ? -1 : 1;
     write(armPoint(facing, random), figureKind.arm, facing);
   }
+  for (let index = 0; index < parts.hand; index += 1) {
+    const facing = index % 5 === 0 ? -1 : 1;
+    write(handPoint(facing, random), figureKind.hand, facing);
+  }
+  for (let index = 0; index < parts.ring; index += 1) write(ringPoint(random), figureKind.ring, 0);
 
   return { count: cursor, positions, kind, side };
 }
@@ -77,67 +86,145 @@ export function sliceFigure(sample: FigureSample, include: (kind: number) => boo
   return { count: cursor, positions, kind, side };
 }
 
-function partCounts(total: number, body: boolean): Record<'head' | 'eye' | 'lid' | 'mouth' | 'torso' | 'arm', number> {
+function partCounts(
+  total: number,
+  body: boolean,
+): Record<'head' | 'eye' | 'lid' | 'mouth' | 'torso' | 'arm' | 'hair' | 'hand' | 'ring', number> {
   if (!body) {
-    const eye = Math.round(total * 0.12);
-    const lid = Math.round(total * 0.07);
-    const mouth = Math.round(total * 0.1);
-    return { head: total - eye - lid - mouth, eye, lid, mouth, torso: 0, arm: 0 };
+    const hair = Math.round(total * 0.24);
+    const eye = Math.round(total * 0.1);
+    const lid = Math.round(total * 0.06);
+    const mouth = Math.round(total * 0.08);
+    return { head: total - hair - eye - lid - mouth, eye, lid, mouth, torso: 0, arm: 0, hair, hand: 0, ring: 0 };
   }
-  const eye = Math.round(total * 0.08);
-  const lid = Math.round(total * 0.05);
-  const mouth = Math.round(total * 0.07);
-  const torso = Math.round(total * 0.16);
-  const arm = Math.round(total * 0.08);
-  return { head: total - eye - lid - mouth - torso - arm, eye, lid, mouth, torso, arm };
+  const hair = Math.round(total * 0.18);
+  const eye = Math.round(total * 0.018);
+  const lid = Math.round(total * 0.012);
+  const mouth = Math.round(total * 0.02);
+  const torso = Math.round(total * 0.22);
+  const arm = Math.round(total * 0.09);
+  const hand = Math.round(total * 0.1);
+  const ring = Math.round(total * 0.04);
+  return {
+    head: total - hair - eye - lid - mouth - torso - arm - hand - ring,
+    eye,
+    lid,
+    mouth,
+    torso,
+    arm,
+    hair,
+    hand,
+    ring,
+  };
 }
 
 function headPoint(index: number, count: number): [number, number, number] {
-  const y = 1 - (index / Math.max(1, count - 1)) * 2;
-  const radius = Math.sqrt(Math.max(0, 1 - y * y));
+  const faceCount = Math.max(1, Math.floor(count * 0.74));
+  if (index < faceCount) return facePoint(index, faceCount);
+  return craniumPoint(index - faceCount, count - faceCount);
+}
+
+function facePoint(index: number, count: number): [number, number, number] {
+  const yUnit = 1 - ((index + 0.5) / count) * 2;
+  const ring = Math.sqrt(Math.max(0, 1 - yUnit * yUnit));
   const theta = Math.PI * (3 - Math.sqrt(5)) * index;
-  const x = Math.cos(theta) * radius * 0.72;
-  const yy = y * 0.96 - 0.02;
-  let z = Math.sin(theta) * radius * 0.8;
-  const chin = Math.min(0, yy + 0.12);
-  const x2 = x * (1 + chin * 0.5);
-  if (z > 0) {
-    const nose = Math.exp(-(x2 * x2) / 0.018 - ((yy - 0.02) ** 2) / 0.028);
-    const socketL = Math.exp(-((x2 - 0.2) ** 2) / 0.01 - ((yy - 0.14) ** 2) / 0.012);
-    const socketR = Math.exp(-((x2 + 0.2) ** 2) / 0.01 - ((yy - 0.14) ** 2) / 0.012);
-    const mouth = Math.exp(-(x2 * x2) / 0.035 - ((yy + 0.34) ** 2) / 0.01);
-    z += nose * 0.18 - (socketL + socketR) * 0.09 - mouth * 0.045;
+  const v = yUnit * 0.92;
+  const u = Math.cos(theta) * ring * (v < -0.55 ? 0.86 : 0.96);
+  return [u * 0.17, 0.44 + v * 0.2, 0.1 + (1 - Math.min(1, u * u + v * v)) * 0.02];
+}
+
+function craniumPoint(index: number, count: number): [number, number, number] {
+  const yUnit = 0.15 + ((index + 0.5) / Math.max(1, count)) * 0.85;
+  const ring = Math.sqrt(Math.max(0, 1 - yUnit * yUnit));
+  const theta = Math.PI * (3 - Math.sqrt(5)) * (index + 40);
+  return [Math.cos(theta) * ring * 0.15, 0.52 + yUnit * 0.1, -0.04];
+}
+
+function hairPoint(index: number, count: number, random: () => number): [number, number, number] {
+  const region = index / Math.max(1, count);
+  if (region < 0.74) {
+    const y = 0.4 + random() * 0.6;
+    const ring = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = random() * Math.PI * 2;
+    return [Math.cos(theta) * ring * 0.16, 0.58 + y * 0.08, -0.06];
   }
-  return [x2, yy, z];
+  const angle = random() * Math.PI * 2;
+  const radius = Math.sqrt(random()) * 0.065;
+  return [Math.cos(angle) * radius * 0.7, 0.52, -0.1];
 }
 
 function eyePoint(facing: number, random: () => number): [number, number, number] {
   const angle = random() * Math.PI * 2;
-  const radius = Math.sqrt(random()) * 0.042;
-  return [facing * 0.2 + Math.cos(angle) * radius, 0.12 + Math.sin(angle) * radius * 0.62, 0.8];
+  const radius = Math.sqrt(random());
+  return [facing * 0.048 + Math.cos(angle) * radius * 0.014, 0.48 + Math.sin(angle) * radius * 0.008, 0.13];
 }
 
 function lidPoint(facing: number, random: () => number): [number, number, number] {
   const along = random() * 2 - 1;
-  return [facing * 0.2 + along * 0.055, 0.175 + Math.abs(along) * 0.01, 0.76];
+  return [facing * 0.048 + along * 0.018, 0.492, 0.126];
 }
 
 function mouthPoint(upper: boolean, random: () => number): [number, number, number] {
   const along = random() * 2 - 1;
-  const arch = (1 - along * along) * 0.012;
-  return [along * 0.15, -0.34 + (upper ? 0.028 : -0.02) + arch, 0.74];
+  const smile = (1 - along * along) * 0.008;
+  return [along * 0.03, 0.36 + (upper ? 0.004 : 0) + smile * 0.4, 0.125];
 }
 
 function torsoPoint(random: () => number): [number, number, number] {
-  const y = -0.78 - random() * 0.72;
-  const width = 0.42 + (-0.78 - y) * -0.08;
-  const angle = (random() - 0.5) * Math.PI * 1.15;
-  return [Math.sin(angle) * width, y, Math.cos(angle) * 0.2 - 0.02];
+  if (random() < 0.08) {
+    const angle = (random() - 0.5) * Math.PI;
+    return [Math.sin(angle) * 0.07, 0.28 + random() * 0.04, 0.08];
+  }
+  const t = random();
+  const y = 0.3 - t * 0.42;
+  const opened = Math.sin(Math.min(1, t * 2.4) * Math.PI * 0.5);
+  const halfW = 0.09 + opened * 0.28;
+  const x = (random() * 2 - 1) * halfW;
+  const edge = halfW === 0 ? 0 : Math.abs(x) / halfW;
+  return [x, y, 0.09 - edge * edge * 0.025];
 }
 
 function armPoint(facing: number, random: () => number): [number, number, number] {
+  const t = random();
+  if (facing > 0) {
+    const point = bezier([-0.32, 0.16, 0.08], [-0.38, 0.08, 0.26], [-0.18, 0.05, 0.44], t);
+    return [point[0] + (random() - 0.5) * 0.03, point[1] + (random() - 0.5) * 0.025, point[2] + (random() - 0.5) * 0.025];
+  }
+  return [0.34, 0.16 - t * 0.26, 0.07];
+}
+
+function handPoint(facing: number, random: () => number): [number, number, number] {
+  if (facing < 0) return [0.34 + (random() - 0.5) * 0.025, -0.1, 0.07];
+  const wrist: [number, number, number] = [-0.14, 0.04, 0.48];
+  if (random() < 0.42) {
+    const angle = random() * Math.PI * 2;
+    const radius = Math.sqrt(random()) * 0.05;
+    return [wrist[0] + Math.cos(angle) * radius, wrist[1] + Math.sin(angle) * radius * 0.62, wrist[2] + radius * 0.12];
+  }
+  const finger = Math.floor(random() * 5);
   const along = random();
-  return [facing * (0.46 + along * 0.05), -0.86 - along * 0.58, 0.02];
+  const thumb = finger === 4;
+  const spread = (finger - 1.5) * 0.016;
+  return [
+    wrist[0] + (thumb ? -0.04 : spread),
+    wrist[1] + along * (thumb ? 0.01 : 0.05) + (thumb ? -0.02 : 0.01),
+    wrist[2] + along * (thumb ? 0.035 : 0.07),
+  ];
+}
+
+function ringPoint(random: () => number): [number, number, number] {
+  const angle = random() * Math.PI * 2;
+  const radius = 0.4 + (random() - 0.5) * 0.008;
+  return [Math.cos(angle) * radius, -0.14, Math.sin(angle) * radius * 0.28 + 0.14];
+}
+
+function bezier(a: number[], b: number[], c: number[], t: number): [number, number, number] {
+  const u = 1 - t;
+  return [
+    u * u * (a[0] ?? 0) + 2 * u * t * (b[0] ?? 0) + t * t * (c[0] ?? 0),
+    u * u * (a[1] ?? 0) + 2 * u * t * (b[1] ?? 0) + t * t * (c[1] ?? 0),
+    u * u * (a[2] ?? 0) + 2 * u * t * (b[2] ?? 0) + t * t * (c[2] ?? 0),
+  ];
 }
 
 function mulberry32(seed: number): () => number {

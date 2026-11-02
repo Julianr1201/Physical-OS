@@ -71,4 +71,17 @@ describe('simulated commerce', () => {
     expect(refunded.status).toBe('REFUNDED');
     expect(commerce.dispenserExecutions()).toBe(1);
   });
+
+  it('starts payment once from a held order', () => {
+    const commerce = new CommerceService(() => new Date('2026-11-01T18:00:00.000Z'));
+    const held = commerce.holdOrder([{ sku: 'coffee', qty: 1 }]);
+    expect(held.status).toBe('CREATED');
+    expect(held.paymentCaptured).toBe(false);
+    const first = commerce.openPayment(held.id);
+    const second = commerce.openPayment(held.id);
+    expect(first.order.status).toBe('AWAITING_PAYMENT');
+    expect(second.session.id).toBe(first.session.id);
+    expect(second.payToken).toBe('');
+    expect(commerce.simulatePayment(held.id).dispenseVerified).toBe(true);
+  });
 });

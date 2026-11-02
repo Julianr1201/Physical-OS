@@ -23,10 +23,10 @@ export function PresenceCanvas({
 }) {
   return (
     <Canvas
-      camera={{ position: [0, 0.02, 2.55], fov: 30 }}
+      camera={{ position: [0, 0.28, 1.85], fov: 28 }}
       dpr={tier === 'low' ? 1 : tier === 'medium' ? 1.25 : [1, 1.5]}
       gl={{ alpha: false, antialias: tier === 'high', powerPreference: 'high-performance' }}
-      onCreated={({ camera }) => camera.lookAt(0, -0.05, 0)}
+      onCreated={({ camera }) => camera.lookAt(-0.04, 0.3, 0.1)}
     >
       <color attach="background" args={['#101419']} />
       <PresenceFigure
