@@ -1,0 +1,19 @@
+---
+description: Keyboard and remote focus for the Physical OS television
+globs: apps/console/src/components/tv/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Remote navigation
+
+Arrow keys move through `moveFocus`. Enter activates the focused control. Escape closes the open panel and restores the previous target.
+
+- Keep a visible accent focus ring. Do not hide focus.
+- Do not steal Left and Right from a volume or brightness slider.
+- Do not trap focus: every panel has a close control.
+
+```ts
+setFocus(moveFocus(items, focus, event.key));
+```
+
+Do not rely on hover for a control that a remote must reach.

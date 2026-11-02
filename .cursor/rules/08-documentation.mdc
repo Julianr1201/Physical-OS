@@ -1,0 +1,14 @@
+---
+description: Documentation accuracy for Physical OS
+globs: "{docs,README.md,AGENTS.md,SECURITY.md,CONTRIBUTING.md}/**"
+alwaysApply: false
+---
+
+# Documentation
+
+- Write primary docs in English. Keep the Spanish quick start in `README.md`.
+- Describe the command outcome and the software stop the way the code behaves.
+- Mark unfinished integrations as planned in the same change that mentions them.
+- Add an ADR when a persistence, process, or safety boundary changes.
+
+Do not document a provider, a broker, or a device as working unless a test or a local run exercised it. Do not copy CleanYourTV source into the docs.

@@ -1,0 +1,32 @@
+{
+  "name": "physical-os",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Local-first operating platform for physical environments.",
+  "packageManager": "pnpm@10.18.3",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "pnpm run --parallel dev:server dev:console",
+    "dev:server": "pnpm --filter @physical-os/server dev",
+    "dev:console": "pnpm --filter @physical-os/console dev",
+    "typecheck": "node scripts/typecheck.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "recover-admin": "pnpm --filter @physical-os/server recover-admin"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.31.0",
+    "@types/node": "^24.3.0",
+    "eslint": "^9.31.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.35.0",
+    "vitest": "^3.2.4"
+  }
+}

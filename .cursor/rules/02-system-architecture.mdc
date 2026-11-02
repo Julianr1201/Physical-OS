@@ -1,0 +1,19 @@
+---
+description: Module boundaries for the Physical OS control plane
+globs: "{apps,packages}/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Architecture
+
+- The console calls HTTP. It does not import `@physical-os/core`.
+- Device mutations go through `PhysicalSystem.executeCommand` or an explicit core method that audits.
+- Adapters return delivery. The core decides `verified`.
+- New persistence goes behind `SnapshotStore` or the account tables. Do not open a second SQLite connection.
+
+```ts
+const decision = evaluatePolicy(input);
+if (decision.effect !== 'allow') return record(decision);
+```
+
+Do not add a network service for the event bus. Do not publish MQTT from a React component.

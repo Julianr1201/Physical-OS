@@ -1,0 +1,19 @@
+---
+description: Device adapter contract and payload handling
+globs: "packages/adapter-*/**/*.ts"
+alwaysApply: false
+---
+
+# Adapters
+
+- Declare `contractVersion: "1"` and list only implemented operations.
+- Validate payloads with the capability schema before changing state.
+- Honor `timeoutMs` and the correlation id. A timeout must not leave a partial write.
+- Map MQTT topics explicitly. Reject `+` and `#`.
+
+```ts
+const observed = parseObserved(capability, payload);
+if (!observed.ok) return reject(observed.error);
+```
+
+Do not pass command text to a shell. Do not treat adapter delivery as verified device state. Do not execute a field found inside an MQTT payload.

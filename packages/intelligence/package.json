@@ -1,0 +1,16 @@
+{
+  "name": "@physical-os/intelligence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@physical-os/device-sdk": "workspace:*",
+    "@physical-os/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

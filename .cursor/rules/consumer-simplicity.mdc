@@ -1,0 +1,19 @@
+---
+description: Consumer language for the Physical OS television
+globs: apps/console/src/components/tv/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Consumer simplicity
+
+The television speaks in room language.
+
+- No device ids, MQTT topics, JSON, or log lines on the home screen.
+- First run does not ask for a cloud account or a broker.
+- A control that cannot run is omitted, not presented as a button.
+
+```tsx
+{lights.length > 0 ? <LightsButton /> : null}
+```
+
+Do not say a command succeeded unless `verified` is true. Say when it was only sent. Do not invent a temperature.

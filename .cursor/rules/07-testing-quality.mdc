@@ -1,0 +1,19 @@
+---
+description: Test expectations for Physical OS behavior changes
+globs: "**/*.{test,spec}.ts"
+alwaysApply: false
+---
+
+# Tests
+
+- Cover the behavior you changed: capability parsing, policy deny, automation conditions, or the API journey.
+- Use a temporary directory for SQLite and delete it. Do not point tests at `./data`.
+- Assert `outcome` and `verified`, not only the HTTP status.
+- Include one negative case for untrusted input when the change accepts a payload or a sentence.
+
+```ts
+expect(result.outcome).toBe('rejected');
+expect(result.verified).toBe(false);
+```
+
+Do not skip a failing test. Do not claim Playwright coverage; this repository does not run browser end-to-end tests yet.

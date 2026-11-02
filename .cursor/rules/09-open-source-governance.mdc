@@ -1,0 +1,14 @@
+---
+description: Open-source licensing and attribution
+globs: "{LICENSE,CONTRIBUTING.md,SECURITY.md,docs/**}"
+alwaysApply: false
+---
+
+# Governance
+
+- Keep the Apache-2.0 `LICENSE` with the work.
+- Do not commit secrets, `data/`, or `integrations/mqtt/password.txt`.
+- Record third-party licenses before copying code. The CleanYourTV evaluation is reference only.
+- Security reports stay private until a fix exists. See `SECURITY.md`.
+
+Do not relicense a contribution. Do not add a dependency with a non-OSS license.

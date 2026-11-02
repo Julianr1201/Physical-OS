@@ -1,0 +1,22 @@
+---
+description: Physical OS product constitution for every change
+alwaysApply: true
+---
+
+# Constitution
+
+Physical OS is a local-first control plane. The simulator and deterministic automation must work with no cloud account and no API key.
+
+- Keep basic control independent of the intelligence package.
+- A language model proposes a plan. It does not call a device, a shell, or the network.
+- Distinguish observed state, desired state, and unknown. Report `verified` only after a read matches.
+- Label simulated data as simulation in the interface and in device metadata.
+- Leave `integrations/android-tv`, `home-assistant`, `matter`, and `ros2` marked planned until an adapter has tests.
+- Do not add a paid service or a required hardware device without an explicit request.
+
+```ts
+// A command result is not success because the route returned.
+if (result.outcome !== 'verified') throw new Error(result.outcome);
+```
+
+Do not vendor CleanYourTV or open an ADB session. Do not claim a physical device works because the simulator passed.

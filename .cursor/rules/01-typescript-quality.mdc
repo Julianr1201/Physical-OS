@@ -1,0 +1,18 @@
+---
+description: TypeScript strictness and validation for Physical OS packages
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript
+
+- Keep `strict` and `verbatimModuleSyntax`. Import types with `import type`.
+- Parse external input with Zod. Do not widen a payload to `any` to silence a schema error.
+- Handle `noUncheckedIndexedAccess` with an explicit guard.
+
+```ts
+const action = automation.actions[index];
+if (!action) throw new DomainError('malformed_automation', 'Missing action.', 422);
+```
+
+Do not disable strict mode in a package tsconfig. Do not commit a non-null assertion on device state to skip a missing capability.

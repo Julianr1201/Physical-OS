@@ -1,0 +1,18 @@
+---
+description: Reliability limits for the local control plane
+globs: "{apps/server,packages/core,packages/event-bus,packages/automation-engine}/**/*.ts"
+alwaysApply: false
+---
+
+# Performance and reliability
+
+- Keep the API on loopback unless `PHYSICAL_OS_ALLOW_LAN=1`.
+- Bound request bodies, login attempts, command rate, automation depth, and plan size.
+- A slow adapter must time out without reporting verification.
+- Persist after the mutation. Do not block the event-bus drain on disk or on `whenIdle`.
+
+```ts
+bus.publish(event); // handlers enqueue; they do not await bus.whenIdle()
+```
+
+Do not add a cache, a queue service, or a worker process for one home. Do not lower command timeouts to hide a stuck adapter.

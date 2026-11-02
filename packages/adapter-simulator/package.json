@@ -1,0 +1,17 @@
+{
+  "name": "@physical-os/adapter-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@physical-os/adapter-sdk": "workspace:*",
+    "@physical-os/device-sdk": "workspace:*",
+    "@physical-os/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Simulated Home",
+  "label": "simulation",
+  "signal": { "after_sunset": false },
+  "rooms": ["Living Room", "Kitchen", "Bedroom"],
+  "devices": [
+    { "name": "Ceiling light", "room": "Living Room", "kind": "light", "capabilities": ["on_off", "brightness"] },
+    { "name": "Floor lamp", "room": "Living Room", "kind": "light", "capabilities": ["on_off"] },
+    { "name": "Motion sensor", "room": "Living Room", "kind": "motion_sensor", "capabilities": ["motion_sensor"] },
+    { "name": "Climate sensor", "room": "Living Room", "kind": "environment_sensor", "capabilities": ["temperature_sensor", "humidity_sensor"] },
+    { "name": "Wall switch", "room": "Living Room", "kind": "switch", "capabilities": ["on_off"] },
+    { "name": "Kitchen light", "room": "Kitchen", "kind": "light", "capabilities": ["on_off"] },
+    { "name": "Bedroom light", "room": "Bedroom", "kind": "light", "capabilities": ["on_off"] },
+    { "name": "Bedroom thermostat", "room": "Bedroom", "kind": "thermostat", "capabilities": ["temperature_sensor", "temperature_setpoint"] }
+  ],
+  "automation": {
+    "name": "Living room lights after sunset",
+    "when": "motion sensor detected is true",
+    "if": "after_sunset is true",
+    "then": ["Ceiling light on", "Floor lamp on"]
+  }
+}

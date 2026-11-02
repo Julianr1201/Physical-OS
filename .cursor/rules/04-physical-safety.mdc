@@ -1,0 +1,19 @@
+---
+description: Physical safety policy for commands and automations
+alwaysApply: true
+---
+
+# Physical safety
+
+- Default deny for unknown actions, unknown capabilities, and disconnected devices.
+- Medium risk requires `explicit_ui`, `plan_approval`, or `automation_rule`.
+- High risk stays denied. The isolated simulator flag is opt-in and still blocks automations.
+- The software stop blocks actuation until the administrator sends `RESET`.
+
+```ts
+if (capability.risk === 'high' && context.approval === 'automation_rule') {
+  return deny('high_risk_disabled');
+}
+```
+
+Do not add a lock, heater, pump, motor, gate, drone, or vehicle command to the default allow set. Do not describe the software latch as a hardware emergency stop. Do not drive a real television or robot from a test.

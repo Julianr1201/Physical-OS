@@ -1,0 +1,9 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    profiles: ["mqtt"]
+    ports:
+      - "127.0.0.1:1883:1883"
+    volumes:
+      - ./integrations/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./integrations/mqtt/password.txt:/mosquitto/config/password.txt:ro

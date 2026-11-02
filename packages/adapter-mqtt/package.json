@@ -1,0 +1,20 @@
+{
+  "name": "@physical-os/adapter-mqtt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@physical-os/adapter-sdk": "workspace:*",
+    "@physical-os/device-sdk": "workspace:*",
+    "@physical-os/shared": "workspace:*",
+    "mqtt": "^5.13.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "aedes": "^0.51.3",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,20 @@
+---
+description: Television visual tokens for the Physical OS home screen
+globs: apps/console/src/**/*.{css,tsx}
+alwaysApply: false
+---
+
+# Television design tokens
+
+Use the `.tv` variables: `--bg-primary`, `--bg-secondary`, `--surface`, `--surface-raised`, `--text-primary`, `--text-secondary`, `--accent-primary`, `--accent-warm`, `--border-subtle`, `--success`, `--warning`, `--danger`.
+
+- Inter for text. Manrope for display lines.
+- Keep type large enough for a 1920×1080 screen. Hero text stays between 48px and 72px.
+- Pad the screen for overscan with `clamp`.
+- Honor `prefers-reduced-motion`.
+
+```css
+.tv { background: var(--bg-primary); color: var(--text-primary); }
+```
+
+Do not paint settings pages with this palette. Do not add neon or a decorative gradient.

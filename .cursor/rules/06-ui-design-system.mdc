@@ -1,0 +1,23 @@
+---
+description: Console visual and interaction rules
+globs: "{apps/console,packages/ui}/**/*.{ts,tsx,css}"
+alwaysApply: false
+---
+
+# Console
+
+- Settings screens use the paper, ink, brass, pine, and clay tokens.
+- The television home (`apps/console/src/components/tv`) uses the TV tokens in `.tv`. Do not bring those tokens into settings, and do not put settings chrome on the home screen.
+- Do not add gradient fills.
+- Every visible control calls the API or changes local presentation state that is saved.
+- Show simulated devices as simulation. Show planned integrations as planned, with no action button.
+- Keep English and Spanish copy in `src/lib/i18n.ts` for new operator-facing strings.
+- Preserve keyboard focus and a visible focus ring.
+
+```tsx
+<Button type="button" onClick={() => command(device, 'on_off', 'set', { on: true })}>
+  Turn on
+</Button>
+```
+
+Do not add a decorative control for Matter, ROS 2, or Android TV. Do not render an audit entry that the API did not return.

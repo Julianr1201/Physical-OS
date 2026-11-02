@@ -1,0 +1,23 @@
+{
+  "name": "@physical-os/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@physical-os/adapter-mqtt": "workspace:*",
+    "@physical-os/adapter-sdk": "workspace:*",
+    "@physical-os/adapter-simulator": "workspace:*",
+    "@physical-os/automation-engine": "workspace:*",
+    "@physical-os/device-sdk": "workspace:*",
+    "@physical-os/event-bus": "workspace:*",
+    "@physical-os/intelligence": "workspace:*",
+    "@physical-os/policy-engine": "workspace:*",
+    "@physical-os/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

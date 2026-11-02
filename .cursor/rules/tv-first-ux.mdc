@@ -1,0 +1,20 @@
+---
+description: Television-first home experience for Physical OS
+globs: apps/console/src/components/tv/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TV-first experience
+
+The home screen is a television, not an administration panel.
+
+- Lead with the room, the greeting, and one entertainment action.
+- Put device inventory, MQTT, automations, and diagnostics under `/settings`.
+- Show a metric only when a device in the current room reported it.
+- Label simulated playback as a local demonstration.
+
+```tsx
+const ribbon = ribbonFor(devices, roomId, labels);
+```
+
+Do not add a live-TV, HDMI, or streaming tile that cannot play. Do not claim the page is an Android TV app.
