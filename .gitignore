@@ -17,3 +17,4 @@ integrations/mqtt/password.txt
 tsconfig.tsbuildinfo
 .DS_Store
 Thumbs.db
+.vercel

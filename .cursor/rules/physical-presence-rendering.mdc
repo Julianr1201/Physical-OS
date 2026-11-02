@@ -1,20 +1,16 @@
 ---
-description: Point-cloud presence rendering for the conversational figure
+description: Presence rendering for the conversational figure
 globs: "packages/presence/**/*.ts,apps/console/src/components/presence/**/*.{ts,tsx}"
 alwaysApply: false
 ---
 
 # Presence rendering
 
-Draw one presence. The console shows the MIT mesh as a translucent figure when it loads, with a particle shell on that surface. `sampleFigure` is the fallback. Do not draw a video, a sprite sheet, or a solid cartoon texture. Do not mirror the mesh to force it to face the camera; use the declared axes in `femaleAdult01Axes`.
+Draw one presence. The primary file is `female-executive.glb`. Keep its materials. Play Idle before the mesh becomes visible. Drive the mouth from viseme morph targets. `jawOpen` is not the lip-sync channel. The Microsoft mesh and `sampleFigure` are fallbacks only when that file fails. Do not draw a video or a sprite sheet. Do not mirror the mesh.
 
 - Palette: background `#101419`, particles `#B5D7D2`, `#DCEAF0`, `#5E859A`, highlights `#E5C89D`.
-- High, medium, and low tiers must change the particle budget. A measured frame rate below 24 selects low.
-- Morph the mouth, lids, gaze, and the pointing arm in the vertex shader. Keep the idle mouth closed.
+- High, medium, and low tiers change the pixel ratio. A measured frame rate below 24 selects low.
+- `digitalHumanComplete` stays false until unique clips and mesh variants exist.
 - Label simulated homes as simulation. A missing WebGL context leaves the text conversation in place.
 
-```ts
-const figure = sampleFigure(particleBudget(tier), { body: tier !== 'low' });
-```
-
-Do not add a neon bloom pass or a second full-screen post effect.
+Do not add a neon bloom pass or a second full-screen post effect. Do not describe this export as a finished character.

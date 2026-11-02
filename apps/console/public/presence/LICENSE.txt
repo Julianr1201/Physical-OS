@@ -1,6 +1,6 @@
 Copyright (c) 2020 Microsoft
 
-The presence samples this mesh into points. The file female-adult-01.glb is the
+The presence draws this mesh with its own materials. The file female-adult-01.glb is the
 Microsoft character mesh distributed under the MIT License. The notice below is
 the license text stored in that file.
 

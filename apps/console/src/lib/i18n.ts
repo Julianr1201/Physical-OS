@@ -42,6 +42,12 @@ const copy = {
     on: 'On',
     off: 'Off',
     kiosk: 'Store',
+    command: 'Commands',
+    commandHint: 'Jump to a screen',
+    connected: 'Connected',
+    appearance: 'Appearance',
+    presence: 'Presence',
+    profiles: 'Profiles',
   },
   es: {
     product: 'Physical OS',
@@ -84,6 +90,12 @@ const copy = {
     on: 'Encendido',
     off: 'Apagado',
     kiosk: 'Tienda',
+    command: 'Comandos',
+    commandHint: 'Ir a una pantalla',
+    connected: 'Conectado',
+    appearance: 'Apariencia',
+    presence: 'Presencia',
+    profiles: 'Perfiles',
   },
 } as const;
 

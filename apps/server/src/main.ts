@@ -1,23 +1,38 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { buildApp } from './app.js';
+import Fastify from 'fastify';
+import { listenTarget } from './listen-target.js';
 
 loadEnv(resolve(process.cwd(), '.env'));
+loadEnv(resolve(process.cwd(), '../../.env'));
 
-const dataDir = process.env.PHYSICAL_OS_DATA_DIR ?? resolve(process.cwd(), 'data');
-const allowLan = process.env.PHYSICAL_OS_ALLOW_LAN === '1';
-const requested = process.env.PHYSICAL_OS_BIND ?? '127.0.0.1';
-const host = allowLan ? requested : '127.0.0.1';
-const port = Number(process.env.PHYSICAL_OS_PORT ?? 4747);
-const origin = process.env.PHYSICAL_OS_ORIGIN ?? 'http://127.0.0.1:3000';
-const origins = [
-  origin,
-  origin.includes('127.0.0.1') ? origin.replace('127.0.0.1', 'localhost') : origin.replace('localhost', '127.0.0.1'),
-];
+const onVercel = process.env.VERCEL === '1';
 
-const { app } = await buildApp({ dataDir, logger: true, origins });
-await app.listen({ host, port });
-app.log.info({ host, port, lan: allowLan }, 'Physical OS API listening');
+try {
+  const { buildApp } = await import('./app.js');
+  const target = listenTarget(process.env, process.cwd());
+  const { app } = await buildApp({
+    dataDir: target.dataDir,
+    logger: true,
+    origins: target.origins,
+    secureCookie: target.secureCookie,
+  });
+  app.log.info({ host: target.host, port: target.port }, 'Physical OS API listening');
+  if (onVercel) {
+    app.listen({ port: Number(process.env.PORT || 3000) });
+  } else {
+    await app.listen({ host: target.host, port: target.port });
+  }
+} catch (error) {
+  const message = error instanceof Error ? error.message : 'startup failed';
+  console.error(message);
+  if (!onVercel) throw error;
+  const fallback = Fastify({ logger: false });
+  fallback.all('*', async (_request, reply) => {
+    reply.code(500).send({ error: { code: 'startup_failed', message } });
+  });
+  fallback.listen({ port: Number(process.env.PORT || 3000) });
+}
 
 function loadEnv(file: string): void {
   if (!existsSync(file)) return;

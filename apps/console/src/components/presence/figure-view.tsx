@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   advanceBlink,
@@ -130,11 +130,14 @@ export function PresenceFigure({
   const bodyEnabled = tier !== 'low';
   const procedural = useMemo(() => sampleFigure(tier === 'high' ? 8000 : tier === 'medium' ? 3600 : 1400, { body: bodyEnabled }), [tier, bodyEnabled]);
   const [model, setModel] = useState<HologramModel | null>(null);
+  const [surface, setSurface] = useState<'loading' | 'mesh' | 'points'>('loading');
   const readyRef = useRef(onReady);
   readyRef.current = onReady;
   useEffect(() => {
     let cancel = false;
     let active: HologramModel | null = null;
+    setSurface('loading');
+    setModel(null);
     loadHologram(tier)
       .then((loaded) => {
         if (cancel) {
@@ -143,11 +146,15 @@ export function PresenceFigure({
         }
         active = loaded;
         setModel(loaded);
+        setSurface('mesh');
         readyRef.current?.(loaded.loadMs);
       })
       .catch((error: unknown) => {
         console.error(error instanceof Error ? error.message : 'The presence mesh did not load.');
-        if (!cancel) setModel(null);
+        if (!cancel) {
+          setModel(null);
+          setSurface('points');
+        }
       });
     return () => {
       cancel = true;
@@ -181,12 +188,6 @@ export function PresenceFigure({
   };
 
   useEffect(() => () => material.dispose(), [material]);
-  useLayoutEffect(() => {
-    if (!model) return;
-    const previous = model.shell.material;
-    model.shell.material = material;
-    if (previous !== material && !Array.isArray(previous)) previous.dispose();
-  }, [model, material]);
 
   useFrame((clock, dt) => {
     if (state === 'AWAKENING') awaken.current = Math.min(1, awaken.current + dt * 0.7);
@@ -241,13 +242,8 @@ export function PresenceFigure({
     }
   });
 
-  if (model) {
-    return (
-      <group>
-        <primitive object={model.group} />
-        <Cloud sample={model.ambient} material={material} />
-      </group>
-    );
+  if (surface !== 'points') {
+    return model ? <primitive object={model.group} /> : null;
   }
 
   return (

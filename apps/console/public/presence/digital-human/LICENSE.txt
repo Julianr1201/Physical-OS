@@ -1,0 +1,19 @@
+female-executive.glb
+
+The body, skin, hair, eyes, clothing, skeleton, and morph targets come from MakeHuman
+(http://www.makehumancommunity.org). Data Collection AB, Joel Palmius, and Jonas Hauquier
+dedicated those assets to the public domain under CC0 1.0 in September 2020.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The file was exported by Ara 3D Gen (https://github.com/olatunde85/3d-gen), preset
+"The Female Executive", without the preset sunglasses. The generator code is MIT,
+copyright 2026 Josh Ola. Ara 3D Gen states that exported characters may be used in
+commercial and non-commercial projects.
+
+Motion clips are retargeted from the CMU Graphics Lab Motion Capture Database
+(http://mocap.cs.cmu.edu). CMU allows use in commercial products and forbids reselling
+the motion data on its own. Acknowledgement: "The data used in this project was obtained
+from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217."
+
+This export is not a finished digital human. It has no separate high, medium, and low
+meshes, and several requested performances have no authored clip.

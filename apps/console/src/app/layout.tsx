@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('pos-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`,
+            __html: `try{if(localStorage.getItem('pos-theme')==='light')document.documentElement.classList.add('light')}catch(e){}`,
           }}
         />
       </head>

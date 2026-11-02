@@ -1,9 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { loginHref } from '@/lib/safe-next';
+import { useDeviceWeather } from '@/components/device-weather';
 import { useFrame } from '@/components/shell';
+import { Wallpaper } from '@/components/wallpaper';
 
 interface Text {
   en: string;
@@ -48,10 +52,12 @@ const samples: Record<string, string[]> = {
 };
 
 export function ProfilesScreen() {
+  const router = useRouter();
   const frame = useFrame();
   const locale = frame.locale;
   const copy = locale === 'es' ? spanish : english;
   const [catalog, setCatalog] = useState<Manifest[]>([]);
+  const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [avatars, setAvatars] = useState<Choice[]>([]);
   const [voices, setVoices] = useState<Choice[]>([]);
   const [industry, setIndustry] = useState<string | null>(null);
@@ -67,7 +73,6 @@ export function ProfilesScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [activeRole, setActiveRole] = useState<string | null>(null);
   const profile = catalog.find((item) => item.profileId === profileId) ?? null;
-  const industries = [...new Set(catalog.map((item) => item.industry))];
   const professions = [...new Set(catalog.filter((item) => item.industry === industry).map((item) => item.profession))];
   const specializations = catalog.filter((item) => item.industry === industry && item.profession === profession);
 
@@ -77,12 +82,20 @@ export function ProfilesScreen() {
         setCatalog(data.profiles);
         setAvatars(data.avatars);
         setVoices(data.voices);
+        setCatalogState('ready');
       })
-      .catch((error: unknown) => setMessage(error instanceof ApiError ? error.message : copy.unavailable));
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 401) {
+          router.replace(loginHref('/profiles'));
+          return;
+        }
+        setCatalogState('error');
+        setMessage(error instanceof ApiError ? error.message : copy.unavailable);
+      });
     void api<{ role: Text } | null>('/api/v1/profiles/active')
       .then((data) => setActiveRole(data?.role[locale] ?? null))
       .catch(() => setActiveRole(null));
-  }, [copy.unavailable, locale]);
+  }, [copy.unavailable, locale, router]);
 
   function chooseProfile(id: string) {
     const next = catalog.find((item) => item.profileId === id);
@@ -177,9 +190,14 @@ export function ProfilesScreen() {
     }
   }
 
+  const weather = useDeviceWeather();
+  const forecast = weather.status === 'ready' ? weather.forecast : null;
+
   return (
-    <div className="tv min-h-screen">
-      <header className="flex items-center justify-between gap-4">
+    <div className="tv tv-page relative min-h-[100dvh]">
+      <Wallpaper kind={forecast?.kind ?? null} day={forecast?.day ?? true} />
+      <div className="relative z-10">
+      <header className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-lg text-[var(--text-secondary)]">{copy.kicker}</p>
           <h1 className="tv-display text-5xl">{copy.title}</h1>
@@ -195,11 +213,30 @@ export function ProfilesScreen() {
       </ol>
 
       {step === 0 ? (
-        <div className="mt-8 flex flex-wrap gap-3">
-          {industries.map((item) => (
-            <button key={item} type="button" className="bg-[var(--surface)] px-5 py-4 text-xl" onClick={() => { setIndustry(item); setProfession(null); setProfileId(null); setStep(1); }}>
-              {item}
-            </button>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {catalogState === 'error' ? <p className="text-xl text-[var(--text-secondary)]">{copy.unavailable}</p> : null}
+          {catalog.map((item) => (
+            <article key={item.profileId} className="grid gap-3 bg-[var(--surface)] p-5">
+              <p className="text-sm uppercase tracking-[0.14em] text-[var(--text-secondary)]">{item.industry} · {item.profession}</p>
+              <h2 className="tv-display text-3xl">{item.displayName[locale]}</h2>
+              <p className="text-lg text-[var(--text-secondary)]">{item.description[locale]}</p>
+              <p className="text-lg">{copy.review}</p>
+              <ul className="grid gap-1 text-lg">
+                {item.requiredPermissions.map((permission) => <li key={permission}>{permission}</li>)}
+              </ul>
+              <p className="text-lg">{copy.systems}</p>
+              <ul className="grid gap-1 text-lg text-[var(--text-secondary)]">
+                {(item.knowledgeSources.length > 0 ? item.knowledgeSources : [copy.none]).map((source) => (
+                  <li key={source}>{source} · {copy.simulated}</li>
+                ))}
+              </ul>
+              <p className="text-lg">{activeRole === item.displayName[locale] ? copy.active : copy.inactive}</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="bg-[var(--surface-raised)] px-4 py-3 text-lg" onClick={() => { chooseProfile(item.profileId); setIndustry(item.industry); setProfession(item.profession); setStep(3); }}>{copy.configure}</button>
+                <button type="button" className="bg-[var(--surface-raised)] px-4 py-3 text-lg" onClick={() => { chooseProfile(item.profileId); setIndustry(item.industry); setProfession(item.profession); setStep(5); }}>{copy.review}</button>
+                <button type="button" className="px-4 py-3 text-lg" onClick={() => { chooseProfile(item.profileId); setIndustry(item.industry); setProfession(item.profession); setStep(6); }}>{copy.try}</button>
+              </div>
+            </article>
           ))}
         </div>
       ) : null}
@@ -291,6 +328,7 @@ export function ProfilesScreen() {
           nextLabel={copy.switchProfile}
         />
       ) : null}
+      </div>
     </div>
   );
 }
@@ -376,6 +414,8 @@ const english = {
   confirm: 'Confirm order',
   cancel: 'Cancel',
   unavailable: 'The profile service is unavailable.',
+  inactive: 'Not active',
+  configure: 'Configure',
   steps: ['Industry', 'Profession', 'Specialization', 'Appearance', 'Systems', 'Permissions', 'Test', 'Active'],
 };
 
@@ -399,5 +439,7 @@ const spanish = {
   confirm: 'Confirmar pedido',
   cancel: 'Cancelar',
   unavailable: 'El servicio de perfiles no está disponible.',
+  inactive: 'Inactivo',
+  configure: 'Configurar',
   steps: ['Industria', 'Profesión', 'Especialización', 'Apariencia', 'Sistemas', 'Permisos', 'Prueba', 'Activo'],
 };

@@ -23,7 +23,7 @@
 - Real device certification
 - Home Assistant, Matter, ROS 2, or Android TV control
 - Debloating a television
-- Location, weather, or astronomical sunset
+- Astronomical sunset. The phone reads outside weather from its network location through Open-Meteo, without an API key and without storing the coordinate. That reading is not the simulated room climate.
 - High-risk actuation, including thermostat setpoints, locks, motors, irrigation, drones and vehicles
 - Multi-user households beyond the single administrator role check
 - PostgreSQL. The repository interface is the migration boundary
