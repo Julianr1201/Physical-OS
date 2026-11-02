@@ -35,3 +35,19 @@ export {
   type VisualPose,
   type BlinkClock,
 } from './visual.js';
+export {
+  animationLibrary,
+  blendMorphs,
+  clipIntent,
+  cueFromMarks,
+  digitalHumanBones,
+  digitalHumanComplete,
+  digitalHumanMorphs,
+  digitalHumanUrl,
+  morphFrame,
+  type AnimationStatus,
+  type ClipIntent,
+  type LibraryClip,
+  type LipsyncMode,
+  type VisemeMark,
+} from './digital-human.js';

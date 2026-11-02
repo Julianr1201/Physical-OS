@@ -20,6 +20,7 @@ import {
   setMicrophone,
   type InterpretResult,
   type PresenceTurn,
+  type SpeechCue,
   type TurnEvent,
 } from '@physical-os/presence';
 import { api } from '@/lib/api';
@@ -43,6 +44,8 @@ export function PresenceScreen() {
   const [privacy, setPrivacy] = useState(defaultPrivacy);
   const [draft, setDraft] = useState('');
   const [mouth, setMouth] = useState(0);
+  const [cue, setCue] = useState<SpeechCue | null>(null);
+  const [gestureMouthValue, setGestureMouthValue] = useState<number | null>(null);
   const [gaze, setGaze] = useState<{ x: number; y: number } | null>(null);
   const [fps, setFps] = useState<number | null>(null);
   const [hardware, setHardware] = useState({ cores: 4, memoryGb: null as number | null });
@@ -121,12 +124,19 @@ export function PresenceScreen() {
     abortRef.current = controller;
     speakAt.current = performance.now();
     void speakBrowser(line, frame.locale === 'es' ? 'es-MX' : 'en-US', controller.signal, (index) => {
-      setMouth(visemeFromBoundary(line, index).mouth);
+      const next = visemeFromBoundary(line, index);
+      setCue(next);
+      setMouth(next.mouth);
     }).then((result) => {
       if (result === 'ended') dispatch({ type: 'speech_ended', generation });
+      setCue(null);
       setMouth(0);
     });
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+      setCue(null);
+      setMouth(0);
+    };
   }, [turn.speech, turn.generation, turn.line, engines, frame.locale, dispatch]);
 
   useEffect(() => {
@@ -137,15 +147,22 @@ export function PresenceScreen() {
     let frameId = 0;
     const tick = () => {
       const elapsed = performance.now() - started;
-      setMouth(gestureMouth(elapsed, duration));
+      const amount = gestureMouth(elapsed, duration);
+      setMouth(amount);
+      setGestureMouthValue(amount);
       if (elapsed < duration) frameId = window.requestAnimationFrame(tick);
       else {
         setMouth(0);
+        setGestureMouthValue(null);
         dispatch({ type: 'speech_ended', generation });
       }
     };
     frameId = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frameId);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      setGestureMouthValue(null);
+      setMouth(0);
+    };
   }, [turn.speech, turn.generation, turn.line, dispatch]);
 
   useEffect(() => {
@@ -298,6 +315,8 @@ export function PresenceScreen() {
               state={turn.state}
               expression={turn.expression}
               mouth={mouth}
+              cue={cue}
+              gestureMouth={gestureMouthValue}
               tier={tier}
               gaze={privacy.cameraGaze ? gaze : null}
               reducedMotion={reducedMotion}

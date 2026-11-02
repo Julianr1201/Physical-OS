@@ -1,6 +1,6 @@
 # Presence
 
-The conversational surface draws the skinned presence mesh in the browser. A point cloud appears only when that mesh does not load. It is not a video and it does not replace the television home. Open it at `/presence`, or from the home “ask” control. On a phone the figure fills the viewport and the microphone, camera, and reply stay in a bottom sheet. The backdrop follows the device’s outside forecast and is separate from the simulated room climate.
+The conversational surface draws the digital-human mesh in the browser. If that file fails, the console falls back to the Microsoft mesh, and to a point cloud only if that mesh also fails. The Microsoft mesh is not the character. It is not a video and it does not replace the television home. Open it at `/presence`, or from the home “ask” control. On a phone the figure fills the viewport and the microphone, camera, and reply stay in a bottom sheet. The backdrop follows the device’s outside forecast and is separate from the simulated room climate.
 
 `packages/presence` owns the behavior model, privacy defaults, performance tiers, and the sampled figure. It does not import Three.js and it does not call devices. `apps/console` draws the figure and calls the existing interpret and approve routes.
 
@@ -22,7 +22,29 @@ The microphone and the camera start off. Enabling either shows a visible indicat
 
 ## Performance
 
-The figure is the MIT-licensed Microsoft character `apps/console/public/presence/female-adult-01.glb` (copyright 2020 Microsoft), drawn with the skin, hair, and clothing materials stored in that file. The glTF pose is already upright and facing +Z, so the console does not apply a second rotation. The camera frames the head and shoulders. It has facial bones and no morph targets, so the mouth, lids, brows, and eyes are bone rotations driven by the speech cue. The procedural point sample remains the fallback if that file does not load or its measured axes do not match the declared frame. High, medium, and low tiers change the fallback density and the pixel ratio. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
+The figure loaded by `/presence` is `apps/console/public/presence/digital-human/female-executive.glb`. The glTF pose is Y-up and faces +Z. The console keeps the authored materials, plays the Idle clip before showing the mesh, and frames the head and shoulders. Speech moves Oculus viseme morph targets. `jawOpen` is only a small companion on open vowels. High, medium, and low change the pixel ratio. Low also skips the additive eye aim. There is one mesh, not three geometry variants. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
+
+If this file fails to load, the Microsoft mesh is the fallback, and the point sample follows only if that mesh fails too. Conversation text does not wait for the mesh.
+
+## Digital human, not finished
+
+`packages/presence` owns `morphFrame`, `blendMorphs`, and `clipIntent`. The console renderer owns the GLB, the animation mixer, and the lights. The same controller is used for every profession.
+
+The export contains 69 bones and 34 morph targets, listed in `digitalHumanBones` and `digitalHumanMorphs`. Face bones are Neck, Head, HeadTop_End, Jaw, LeftEye, and RightEye. Blink, brow, and mouth shapes are morphs, including `viseme_PP`, `viseme_FF`, `viseme_TH`, `viseme_DD`, `viseme_kk`, `viseme_CH`, `viseme_SS`, `viseme_nn`, `viseme_RR`, `viseme_aa`, `viseme_E`, `viseme_I`, `viseme_O`, and `viseme_U`.
+
+Authored clips used by the controller are Idle, Talk, Wave, and Laugh. Breathing, listening, and thinking reuse Idle. Goodbye reuses Wave and is not wired to a state. Pointing, presenting, confirming, surprised, and concerned have no clip. Concerned and curious are morphs only.
+
+`speechSynthesis` does not supply phoneme times. The console uses `character-fallback`: one character becomes one viseme, then the weights ease toward the morph. A provider that does send marks uses `cueFromMarks`. There is no Spanish forced aligner in this repository. The silent preview is labeled `silent-gesture`.
+
+`digitalHumanComplete` is false. These steps are not done:
+
+- Import into Blender, retopology, and a facial rig authored for this product.
+- Separate takes for breathing, pointing, presenting, confirming, surprised, concerned, and goodbye.
+- High, medium, and low meshes of the same character.
+- A measured memory, frame-rate, and latency report from a signed-in browser session.
+- A video of a Spanish conversation, including an interruption back to idle.
+
+Do not describe this export as a finished character.
 
 ## Projection hardware
 
@@ -40,4 +62,4 @@ MetaHuman (`https://www.metahuman.com/license`) may be used outside Unreal Engin
 
 Ara 3D Gen (`https://github.com/olatunde85/3d-gen`) was run from an independent directory, not as a Physical OS dependency. The generator code is MIT, copyright 2026 Josh Ola. The body, skin, hair, eyes, and clothing come from MakeHuman and are CC0 1.0, dedicated in September 2020 by Data Collection AB, Joel Palmius, and Jonas Hauquier. The motion clips are retargeted from the CMU Graphics Lab Motion Capture Database. CMU allows commercial products and forbids reselling the motion data on its own. A shipped clip still needs this acknowledgement: "The data used in this project was obtained from mocap.cs.cmu.edu. The database was created with funding from NSF EIA-0196217."
 
-The Female Executive preset exported as a high-detail GLB: 172 cm, 156,620 triangles without the preset sunglasses, 23 materials, 69 bones, 34 morph targets, and 77 clips, about 16.3 MB. Face bones are Neck, Head, Jaw, LeftEye, and RightEye. There are no eyelid or brow bones. Blink, brow, and mouth shapes are morph targets, including the Oculus visemes `viseme_PP`, `viseme_FF`, `viseme_TH`, `viseme_DD`, `viseme_kk`, `viseme_CH`, `viseme_SS`, `viseme_nn`, `viseme_RR`, `viseme_aa`, `viseme_E`, `viseme_I`, `viseme_O`, and `viseme_U`. The file was not added to the console. The preview is `docs/architecture/female-executive-preview.png`. The face, hair, eyes, and suit are recognizable, and the skin and hair still read as a game mesh: smooth plastic skin, flat hair, and a seam on the crown. The bind pose holds the arms out. The Idle clip moves the left hand inward, from about 0.43 m to 0.27 m off the midline, and does not settle into a relaxed half-body pose. No particle layer was added on top of this preset.
+The Female Executive preset exported as a high-detail GLB: 172 cm, 23 materials, 69 bones, 34 morph targets, and 77 clips. The file in the console is 17,044,040 bytes. The preview of an earlier render is `docs/architecture/female-executive-preview.png`. The skin and hair still read as a game mesh: smooth skin, flat hair, and a seam on the crown. No particle layer is drawn on top of this preset. The license note is `apps/console/public/presence/digital-human/LICENSE.txt`.
