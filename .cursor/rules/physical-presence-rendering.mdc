@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Presence rendering
 
-Draw one instanced point figure from `sampleFigure`. Do not use a video, a sprite sheet, or a cartoon material.
+Draw one instanced point figure. `sampleFigure` is the fallback. The console may replace it with points sampled from the MIT mesh in `apps/console/public/presence/`. Do not draw that mesh as a solid textured character, and do not use a video, a sprite sheet, or a cartoon material.
 
 - Palette: background `#101419`, particles `#B5D7D2`, `#DCEAF0`, `#5E859A`, highlights `#E5C89D`.
 - High, medium, and low tiers must change the particle budget. A measured frame rate below 24 selects low.

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   advanceBlink,
@@ -15,6 +15,7 @@ import {
   type PresenceState,
 } from '@physical-os/presence';
 import * as THREE from 'three';
+import { loadPresenceMesh } from './mesh-sample';
 
 const vertexShader = /* glsl */ `
 attribute vec3 instanceOffset;
@@ -29,6 +30,7 @@ uniform float uGesture;
 uniform float uEnergy;
 uniform float uBrow;
 uniform float uSize;
+uniform float uMesh;
 varying vec2 vUv;
 varying float vKind;
 varying float vShade;
@@ -38,25 +40,26 @@ void main() {
   vKind = aKind;
   vec3 p = instanceOffset;
   vec3 center = vec3(0.0, -0.15, 0.0);
-  p += (p - center) * (uSpread - 1.0);
+  float spread = uMesh > 0.5 ? mix(1.0, uSpread, 0.04) : uSpread;
+  p += (p - center) * (spread - 1.0);
   vec3 normal = normalize(instanceOffset - vec3(0.0, 0.02, 0.0));
   float key = clamp(dot(normal, normalize(vec3(-0.3, 0.55, 0.85))), 0.0, 1.0);
   float fill = clamp(dot(normal, normalize(vec3(0.45, -0.15, 0.4))), 0.0, 1.0);
   vShade = normal.z < 0.0 ? 0.48 + fill * 0.15 : 0.62 + key * 0.38 + fill * 0.08;
 
-  if (aKind < 0.5) {
+  if (uMesh < 0.5 && aKind < 0.5) {
     float brow = smoothstep(0.52, 0.56, instanceOffset.y) * (1.0 - smoothstep(0.58, 0.64, instanceOffset.y));
     brow *= 1.0 - min(1.0, abs(instanceOffset.x) * 8.0);
     p.y += brow * uBrow * 0.02;
   }
-  if (aKind > 0.5 && aKind < 1.5) {
+  if (uMesh < 0.5 && aKind > 0.5 && aKind < 1.5) {
     p.x += uGaze.x * 0.012;
     p.y += uGaze.y * 0.008;
     vShade = 1.0;
   }
-  if (aKind > 1.5 && aKind < 2.5) p.y -= uBlink * 0.018;
-  if (aKind > 2.5 && aKind < 3.5) p.y += aSide * uMouth * 0.02;
-  if ((aKind > 4.5 && aKind < 5.5 && aSide > 0.0) || (aKind > 6.5 && aKind < 7.5 && aSide > 0.0)) {
+  if (uMesh < 0.5 && aKind > 1.5 && aKind < 2.5) p.y -= uBlink * 0.018;
+  if (uMesh < 0.5 && aKind > 2.5 && aKind < 3.5) p.y += aSide * uMouth * 0.02;
+  if (uMesh < 0.5 && ((aKind > 4.5 && aKind < 5.5 && aSide > 0.0) || (aKind > 6.5 && aKind < 7.5 && aSide > 0.0))) {
     vec3 pivot = vec3(-0.32, 0.16, 0.08);
     vec3 q = p - pivot;
     float ang = uGesture * 0.18;
@@ -123,7 +126,23 @@ export function PresenceFigure({
   const started = useRef<number | null>(null);
   const reported = useRef(false);
   const bodyEnabled = tier !== 'low';
-  const sampled = useMemo(() => sampleFigure(tier === 'high' ? 8000 : tier === 'medium' ? 3600 : 1400, { body: bodyEnabled }), [tier, bodyEnabled]);
+  const procedural = useMemo(() => sampleFigure(tier === 'high' ? 8000 : tier === 'medium' ? 3600 : 1400, { body: bodyEnabled }), [tier, bodyEnabled]);
+  const [meshSample, setMeshSample] = useState<FigureSample | null>(null);
+  useEffect(() => {
+    let cancel = false;
+    const count = tier === 'high' ? 12000 : tier === 'medium' ? 6000 : 2400;
+    loadPresenceMesh(count)
+      .then((sample) => {
+        if (!cancel) setMeshSample(sample);
+      })
+      .catch(() => {
+        if (!cancel) setMeshSample(null);
+      });
+    return () => {
+      cancel = true;
+    };
+  }, [tier]);
+  const sampled = meshSample ?? procedural;
   const headSample = useMemo(
     () => sliceFigure(sampled, (kind) => kind < figureKind.torso || kind === figureKind.hair),
     [sampled],
@@ -144,6 +163,8 @@ export function PresenceFigure({
     uEnergy: { value: number };
     uBrow: { value: number };
     uOpacity: { value: number };
+    uMesh: { value: number };
+    uSize: { value: number };
   };
 
   useEffect(() => () => material.dispose(), [material]);
@@ -165,6 +186,8 @@ export function PresenceFigure({
     uniforms.uEnergy.value = energy;
     uniforms.uBrow.value = pose.brow;
     uniforms.uOpacity.value = pose.opacity;
+    uniforms.uMesh.value = meshSample ? 1 : 0;
+    uniforms.uSize.value = meshSample ? (tier === 'high' ? 0.008 : tier === 'medium' ? 0.011 : 0.016) : tier === 'high' ? 0.01 : tier === 'medium' ? 0.014 : 0.022;
     const sway = reducedMotion ? 0.08 : 1;
     if (head.current) {
       head.current.rotation.y = (Math.sin(clock.clock.elapsedTime * 0.31) * 0.08 + Math.sin(clock.clock.elapsedTime * 0.17) * 0.035 + gazeX * 0.18) * sway;
@@ -231,6 +254,7 @@ function createMaterial(tier: PerformanceTier): THREE.ShaderMaterial {
       uBrow: { value: 0 },
       uOpacity: { value: 0.4 },
       uSize: { value: tier === 'high' ? 0.01 : tier === 'medium' ? 0.014 : 0.022 },
+      uMesh: { value: 0 },
       uPrimary: { value: new THREE.Color('#B5D7D2') },
       uSecondary: { value: new THREE.Color('#DCEAF0') },
       uDepth: { value: new THREE.Color('#5E859A') },

@@ -22,7 +22,7 @@ The microphone and the camera start off. Enabling either shows a visible indicat
 
 ## Performance
 
-The figure is one instanced billboard draw of a bust: a face, hair gathered back, a torso, one open hand extended forward, and a ring on the floor. It is still sampled points. High, medium, and low tiers change the particle count and the pixel ratio. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
+The figure is one instanced billboard draw. The points are sampled from a MIT-licensed Microsoft character mesh (`apps/console/public/presence/female-adult-01.glb`, copyright 2020 Microsoft). The procedural sample remains the fallback if that file does not load. It is still points, not a video. High, medium, and low tiers change the particle count and the pixel ratio. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
 
 ## Projection hardware
 
