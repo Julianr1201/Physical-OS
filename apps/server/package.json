@@ -10,15 +10,18 @@
   },
   "dependencies": {
     "@physical-os/adapter-mqtt": "workspace:*",
+    "@physical-os/commerce": "workspace:*",
     "@physical-os/core": "workspace:*",
     "@physical-os/intelligence": "workspace:*",
     "@physical-os/shared": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "fastify": "^5.4.0",
+    "qrcode": "^1.5.4",
     "tsx": "^4.20.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "typescript": "^5.8.3"
   }
 }

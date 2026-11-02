@@ -1,0 +1,22 @@
+---
+description: Payment verification rules for Physical OS commerce
+globs: "{packages/commerce,apps/server/src/commerce-routes.ts}/**/*.ts"
+alwaysApply: false
+---
+
+# Payment security
+
+A payment is real only after the server verifies a signed provider notice.
+
+- Keep raw card numbers and track data out of the process.
+- Treat a button press, a query flag, or a client status as untrusted.
+- Apply each provider event id once.
+- Expire unpaid sessions and release their stock.
+- Refuse a provider whose mode is not `simulation` until a live verifier exists.
+
+```ts
+const notice = provider.verify(body, signature);
+if (seen.has(notice.providerEventId)) return order;
+```
+
+Do not store a secret in the repository. Do not describe a generic NFC reader as a contactless card terminal.

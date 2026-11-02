@@ -1,0 +1,19 @@
+---
+description: Self-service commerce stays optional and customer-facing
+globs: "{packages/commerce,apps/console/src/app/kiosk,apps/server/src/commerce-routes.ts}/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Commerce self-service
+
+Commerce is a kiosk mode. The television home stays the default.
+
+- Show products, a cart, a QR session, fulfillment, and a digital receipt.
+- Keep cash, drawers, printers, and cashier screens out of the customer flow.
+- Mark every simulated charge on the screen and in the payload.
+
+```tsx
+if (!order.paymentCaptured) showWaiting();
+```
+
+Do not put MQTT, adapter forms, or device ids on the kiosk. Do not replace `/` with the store.

@@ -132,6 +132,60 @@ describe('control API', () => {
     expect(home.json().data.simulated).toBe(true);
     await app.close();
   });
+
+  it('sells a simulated product only after a verified payment', async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), 'physical-os-'));
+    dirs.push(dataDir);
+    const { app } = await buildApp({ dataDir, logger: false });
+    const setup = await app.inject({
+      method: 'POST',
+      url: '/api/v1/setup',
+      payload: { displayName: 'Ada', password: 'local-admin-pass' },
+    });
+    const cookie = cookieOf(setup.headers['set-cookie']);
+    const catalog = await app.inject({ method: 'GET', url: '/api/v1/commerce/catalog', headers: { cookie } });
+    expect(catalog.statusCode).toBe(200);
+    expect(catalog.json().data.simulated).toBe(true);
+    expect(catalog.json().data.nfc.available).toBe(false);
+
+    const checkout = await app.inject({
+      method: 'POST',
+      url: '/api/v1/commerce/checkout',
+      headers: { cookie },
+      payload: { lines: [{ sku: 'water', qty: 1 }], handoffOrigin: 'http://127.0.0.1:3000' },
+    });
+    expect(checkout.statusCode).toBe(200);
+    expect(checkout.json().data.order.status).toBe('AWAITING_PAYMENT');
+    expect(checkout.json().data.qrSvg).toContain('<svg');
+    const orderId = checkout.json().data.order.id as string;
+
+    const forged = await app.inject({
+      method: 'POST',
+      url: '/api/v1/commerce/payments/callback',
+      headers: { cookie },
+      payload: { body: JSON.stringify({ paid: true }), signature: 'a'.repeat(64) },
+    });
+    expect(forged.statusCode).toBe(403);
+
+    const paid = await app.inject({
+      method: 'POST',
+      url: `/api/v1/commerce/orders/${orderId}/pay-simulation`,
+      headers: { cookie },
+    });
+    expect(paid.statusCode).toBe(200);
+    expect(paid.json().data.status).toBe('FULFILLED');
+    expect(paid.json().data.dispenseVerified).toBe(true);
+
+    const receipt = await app.inject({ method: 'GET', url: `/api/v1/commerce/orders/${orderId}/receipt`, headers: { cookie } });
+    expect(receipt.json().data.simulated).toBe(true);
+    expect(receipt.json().data.paymentVerified).toBe(true);
+    const handoff = await app.inject({
+      method: 'GET',
+      url: `/api/v1/commerce/handoff/${orderId}?token=not-a-real-payment-token`,
+    });
+    expect(handoff.statusCode).toBe(401);
+    await app.close();
+  });
 });
 
 function cookieOf(header: string | string[] | undefined): string {

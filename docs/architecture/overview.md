@@ -33,6 +33,10 @@ Command outcomes are `awaiting_approval`, `rejected`, `delivered`, `verified`, `
 
 Replace `AppDatabase` with a PostgreSQL Drizzle driver that satisfies the same snapshot and account operations. Do not put SQL in the core. The core depends on `SnapshotStore`.
 
+## Commerce
+
+Self-service checkout is optional. See `docs/architecture/commerce.md`. It uses a simulated QR provider and a simulated locker. It does not replace the television home and it does not take cards.
+
 ## Domains
 
 Home, garden, robot, drone and building products would share the registry, capability model, event bus, automation engine, policy engine, intelligence boundary and audit. Each domain supplies its own capabilities, adapters and policy. None of those products are implemented. `PhysicalEnvironment.domain` is `home` only.

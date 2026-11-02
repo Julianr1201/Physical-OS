@@ -41,6 +41,7 @@ const copy = {
     adjust: 'Adjust',
     on: 'On',
     off: 'Off',
+    kiosk: 'Store',
   },
   es: {
     product: 'Physical OS',
@@ -82,6 +83,7 @@ const copy = {
     adjust: 'Ajustar',
     on: 'Encendido',
     off: 'Apagado',
+    kiosk: 'Tienda',
   },
 } as const;
 

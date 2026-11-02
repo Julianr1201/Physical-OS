@@ -12,6 +12,7 @@ Build Physical OS as a local-first control plane. Basic control must work withou
 - `packages/adapter-simulator` and `packages/adapter-mqtt` — the only working adapters
 - `packages/automation-engine` — deterministic rules
 - `packages/intelligence` — deterministic parser and optional plan provider
+- `packages/commerce` — optional simulated self-service checkout. It does not replace the television home
 - `apps/server` — authenticated HTTP API and SQLite
 - `apps/console` — control console
 - `integrations/` — planned. Do not present these as working
@@ -20,6 +21,8 @@ Build Physical OS as a local-first control plane. Basic control must work withou
 ## Boundaries
 
 Device commands enter `PhysicalSystem.executeCommand`. The policy engine runs before any adapter. Adapters do not get a shell. MQTT payloads update observed state only when they match a declared capability schema.
+
+Commerce payments become paid only after a signed notice is verified. The simulated locker must not dispense twice for one order. Do not store card data.
 
 Do not add a paid service, a required cloud account, or a hardware dependency without an explicit request.
 

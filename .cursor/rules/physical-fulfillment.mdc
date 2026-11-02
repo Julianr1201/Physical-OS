@@ -1,0 +1,21 @@
+---
+description: Physical fulfillment must not dispense twice
+globs: packages/commerce/**/*.ts
+alwaysApply: false
+---
+
+# Physical fulfillment
+
+One order gets one dispense command.
+
+- Authorize fulfillment only after a verified payment.
+- If the command was accepted but not verified, read the record again. Do not send another command.
+- If the dispenser rejects the command before accepting it, a retry or a refund is allowed.
+- Record the evidence on the order.
+
+```ts
+const previous = issued.get(command.idempotencyKey);
+if (previous) return { ...previous, duplicate: true };
+```
+
+Do not call a lock, motor, or heater through this path. The simulated locker is not a physical lock.

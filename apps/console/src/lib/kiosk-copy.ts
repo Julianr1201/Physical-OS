@@ -1,0 +1,56 @@
+import type { Locale } from './i18n';
+
+const copy = {
+  en: {
+    badge: 'Demonstration. This is not a real charge.',
+    attract: 'Tap to begin',
+    shop: 'Choose something',
+    cart: 'Your items',
+    pay: 'Pay',
+    cancel: 'Cancel',
+    back: 'Back',
+    empty: 'Nothing selected',
+    qr: 'Scan to pay on your phone',
+    simulate: 'Simulate payment',
+    waiting: 'Waiting for the verified payment',
+    delivering: 'Preparing the item',
+    done: 'Ready',
+    receipt: 'Digital receipt',
+    next: 'Next customer',
+    refund: 'Refund',
+    retry: 'Try delivery again',
+    verify: 'Check delivery',
+    paidNotDelivered: 'The payment was verified. The dispenser did not finish.',
+    refunded: 'The simulated payment was returned.',
+    unavailable: 'Contactless card payment is not available on this screen.',
+    say: 'Say a product',
+  },
+  es: {
+    badge: 'Demostración. Esto no es un cobro real.',
+    attract: 'Toca para empezar',
+    shop: 'Elige algo',
+    cart: 'Tu selección',
+    pay: 'Pagar',
+    cancel: 'Cancelar',
+    back: 'Volver',
+    empty: 'Nada elegido',
+    qr: 'Escanea para pagar en tu teléfono',
+    simulate: 'Simular pago',
+    waiting: 'Esperando el pago verificado',
+    delivering: 'Preparando el producto',
+    done: 'Listo',
+    receipt: 'Recibo digital',
+    next: 'Siguiente cliente',
+    refund: 'Reembolsar',
+    retry: 'Reintentar entrega',
+    verify: 'Verificar entrega',
+    paidNotDelivered: 'El pago quedó verificado. El dispensador no terminó.',
+    refunded: 'El pago simulado fue devuelto.',
+    unavailable: 'El pago con tarjeta sin contacto no está disponible en esta pantalla.',
+    say: 'Decir un producto',
+  },
+} as const;
+
+export function kioskMessages(locale: Locale) {
+  return copy[locale];
+}

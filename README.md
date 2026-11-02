@@ -15,6 +15,7 @@ The current product is an MVP for a simulated home, plus a real MQTT adapter. It
 - Approval before a plan runs. The model cannot call devices directly
 - MQTT against a local authenticated broker, with tested topic mapping
 - Software stop latch. It is not a hardware safety system
+- Optional simulated kiosk at `/kiosk`: catalog, QR checkout, verified simulated payment, dispenser, and digital receipt. It is not a cash register and it does not replace the television home
 
 High-risk actuation is denied. Android TV, Home Assistant, Matter and ROS 2 are marked planned.
 
@@ -27,7 +28,7 @@ pnpm install
 pnpm dev
 ```
 
-Abre http://127.0.0.1:3000. La primera vez la pantalla entra sin cuenta en la nube: elige la zona y, si quieres, la casa simulada. Los ajustes quedan aparte. La API escucha solo en `127.0.0.1:4747`.
+Abre http://127.0.0.1:3000. La primera vez la pantalla entra sin cuenta en la nube: elige la zona y, si quieres, la casa simulada. La tienda simulada está en `/kiosk`. Los ajustes quedan aparte. La API escucha solo en `127.0.0.1:4747`.
 
 Para recuperar el acceso, detén el servidor y ejecuta `pnpm recover-admin`. La contraseña temporal se imprime una vez y las sesiones anteriores quedan revocadas.
 

@@ -570,6 +570,9 @@ export function SettingsView() {
           />
           Require confirmation for medium-risk API calls that do not come from a direct control.
         </label>
+        <Link href="/kiosk" className="mt-4 inline-block text-sm underline-offset-4 hover:underline">
+          {copy.kiosk}
+        </Link>
         <p className="mt-4 text-sm text-muted">
           {locale === 'es'
             ? 'Si pierdes la clave local, detén el servidor y ejecuta pnpm recover-admin. La clave nueva se imprime una vez.'

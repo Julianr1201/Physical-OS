@@ -33,7 +33,7 @@ export default function LoginPage() {
         onSubmit={(event) => {
           event.preventDefault();
           void api('/api/v1/session', { method: 'POST', body: JSON.stringify({ password }) })
-            .then(() => router.replace('/'))
+            .then(() => router.replace(new URLSearchParams(window.location.search).get('next') === '/kiosk' ? '/kiosk' : '/'))
             .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : copy.notVerified));
         }}
       >

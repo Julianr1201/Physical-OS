@@ -19,5 +19,10 @@ Authenticated routes require the `pos_session` cookie.
 | POST | `/api/v1/intelligence/interpret` | Parse an utterance into a plan |
 | POST | `/api/v1/intelligence/:planId/approve` | Execute an approved plan |
 | GET | `/api/v1/events` | Server-sent events with type and time only |
+| GET | `/api/v1/commerce/catalog` | Simulated products and stock |
+| POST | `/api/v1/commerce/checkout` | Reserve stock and open a QR payment session |
+| POST | `/api/v1/commerce/orders/:id/pay-simulation` | Ask the server to verify a simulated payment |
+| POST | `/api/v1/commerce/payments/callback` | Apply a signed payment notice |
+| GET | `/api/v1/commerce/orders/:id/receipt` | Digital receipt after a verified outcome |
 
 Command responses include `outcome` and `verified`. Read those fields before treating a call as success.

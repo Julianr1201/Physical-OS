@@ -1,0 +1,11 @@
+export { simulatedCatalog, type CatalogItem } from './catalog.js';
+export { CommerceError } from './errors.js';
+export { EventLog, type CommerceEvent } from './events.js';
+export { SimulatedLocker, type FulfillmentAdapter, type FulfillmentCommand, type FulfillmentResult } from './fulfillment.js';
+export { Inventory, type InventoryReservation } from './inventory.js';
+export { canTransition, orderStates, type OrderState } from './orders.js';
+export { SimulatedQrProvider, stableJson, type PaymentConfirmation, type PaymentProvider, type PaymentSession } from './payments.js';
+export { assertSimulation } from './policies.js';
+export { priceLines } from './pricing.js';
+export { buildReceipt, type DigitalReceipt } from './receipts.js';
+export { CommerceService, type CustomerOrder } from './service.js';
