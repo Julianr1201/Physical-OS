@@ -1,9 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
+import { loginHref } from '@/lib/safe-next';
+import { useDeviceWeather } from '@/components/device-weather';
 import { useFrame } from '@/components/shell';
+import { Wallpaper } from '@/components/wallpaper';
 
 interface Text {
   en: string;
@@ -48,6 +52,7 @@ const samples: Record<string, string[]> = {
 };
 
 export function ProfilesScreen() {
+  const router = useRouter();
   const frame = useFrame();
   const locale = frame.locale;
   const copy = locale === 'es' ? spanish : english;
@@ -80,13 +85,17 @@ export function ProfilesScreen() {
         setCatalogState('ready');
       })
       .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 401) {
+          router.replace(loginHref('/profiles'));
+          return;
+        }
         setCatalogState('error');
         setMessage(error instanceof ApiError ? error.message : copy.unavailable);
       });
     void api<{ role: Text } | null>('/api/v1/profiles/active')
       .then((data) => setActiveRole(data?.role[locale] ?? null))
       .catch(() => setActiveRole(null));
-  }, [copy.unavailable, locale]);
+  }, [copy.unavailable, locale, router]);
 
   function chooseProfile(id: string) {
     const next = catalog.find((item) => item.profileId === id);
@@ -181,9 +190,14 @@ export function ProfilesScreen() {
     }
   }
 
+  const weather = useDeviceWeather();
+  const forecast = weather.status === 'ready' ? weather.forecast : null;
+
   return (
-    <div className="tv min-h-screen">
-      <header className="flex items-center justify-between gap-4">
+    <div className="tv tv-page relative min-h-[100dvh]">
+      <Wallpaper kind={forecast?.kind ?? null} day={forecast?.day ?? true} />
+      <div className="relative z-10">
+      <header className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-lg text-[var(--text-secondary)]">{copy.kicker}</p>
           <h1 className="tv-display text-5xl">{copy.title}</h1>
@@ -314,6 +328,7 @@ export function ProfilesScreen() {
           nextLabel={copy.switchProfile}
         />
       ) : null}
+      </div>
     </div>
   );
 }

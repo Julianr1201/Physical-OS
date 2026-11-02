@@ -6,6 +6,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { Button, Pill } from '@physical-os/ui';
 import { api, ApiError, type Overview } from '@/lib/api';
 import { messages, type Copy, type Locale } from '@/lib/i18n';
+import { loginHref } from '@/lib/safe-next';
+import { DeviceWeatherProvider } from '@/components/device-weather';
 
 interface Frame {
   overview: Overview | null;
@@ -40,7 +42,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
+  const [gate, setGate] = useState<'checking' | 'open'>('checking');
   const [locale, setLocaleState] = useState<Locale>('en');
   const [palette, setPalette] = useState(false);
   const [query, setQuery] = useState('');
@@ -61,14 +63,23 @@ export function Shell({ children }: { children: ReactNode }) {
     const stored = window.localStorage.getItem('pos-locale');
     if (stored === 'es' || stored === 'en') setLocaleState(stored);
     else if (navigator.language.toLowerCase().startsWith('es')) setLocaleState('es');
+    let cancel = false;
     void api<{ authenticated: boolean; enrolled: boolean }>('/api/v1/session')
       .then((session) => {
-        if (!session.authenticated && session.enrolled) router.replace('/login');
-        else if (session.authenticated) return refresh();
+        if (cancel) return undefined;
+        if (!session.authenticated && session.enrolled) {
+          router.replace(loginHref(pathname));
+          return undefined;
+        }
+        setGate('open');
+        if (session.authenticated) return refresh();
         return undefined;
       })
-      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Unable to load'))
-      .finally(() => setReady(true));
+      .catch((reason: unknown) => {
+        if (cancel) return;
+        setError(reason instanceof Error ? reason.message : 'Unable to load');
+        setGate('open');
+      });
     const timer = window.setInterval(() => {
       void refresh().catch(() => undefined);
     }, 15000);
@@ -84,11 +95,12 @@ export function Shell({ children }: { children: ReactNode }) {
     };
     window.addEventListener('keydown', onKey);
     return () => {
+      cancel = true;
       window.clearInterval(timer);
       source.close();
       window.removeEventListener('keydown', onKey);
     };
-  }, [router]);
+  }, [router, pathname]);
 
   const value = useMemo(
     () => ({
@@ -105,7 +117,7 @@ export function Shell({ children }: { children: ReactNode }) {
     [overview, error, locale, copy],
   );
 
-  if (!ready) {
+  if (gate !== 'open') {
     return (
       <div className="tv grid min-h-screen place-items-center">
         <p className="tv-display text-5xl">{copy.product}</p>
@@ -126,6 +138,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <FrameContext.Provider value={value}>
+      <DeviceWeatherProvider>
       {palette ? (
         <dialog open className="mt-16 p-4" aria-label={copy.command} onClose={() => setPalette(false)}>
           <form
@@ -215,6 +228,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
+      </DeviceWeatherProvider>
     </FrameContext.Provider>
   );
 }

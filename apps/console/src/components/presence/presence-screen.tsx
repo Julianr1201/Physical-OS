@@ -23,7 +23,10 @@ import {
   type TurnEvent,
 } from '@physical-os/presence';
 import { api } from '@/lib/api';
+import { useDeviceWeather } from '@/components/device-weather';
 import { useFrame } from '@/components/shell';
+import { Wallpaper } from '@/components/wallpaper';
+import { weatherCopy } from '@/lib/device-weather';
 import { groundUtterance, matchRoom } from '@/lib/room-status';
 import { startCameraGaze } from './camera-gaze';
 import { presenceCopy } from './copy';
@@ -33,6 +36,8 @@ const PresenceCanvas = dynamic(() => import('./canvas').then((mod) => mod.Presen
 
 export function PresenceScreen() {
   const frame = useFrame();
+  const weather = useDeviceWeather();
+  const outside = weatherCopy(frame.locale);
   const copy = presenceCopy(frame.locale);
   const [turn, setTurn] = useState<PresenceTurn>(initialTurn);
   const [privacy, setPrivacy] = useState(defaultPrivacy);
@@ -274,46 +279,56 @@ export function PresenceScreen() {
   const simulated = frame.overview?.environments.some((environment) => environment.simulated) ?? false;
   const stateLabel = copy.states[turn.state] ?? turn.state;
 
+  const forecast = weather.status === 'ready' ? weather.forecast : null;
+  const weatherLine = forecast
+    ? `${outside.outside} ${Math.round(forecast.celsius)}° · ${outside[forecast.kind]}`
+    : weather.status === 'denied'
+      ? outside.denied
+      : weather.status === 'unavailable'
+        ? outside.unavailable
+        : outside.locating;
+
   return (
-    <div className="tv grid min-h-screen !p-0 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <section className="relative min-h-[62vh] bg-[#101419] lg:min-h-screen" onClick={wake}>
-        <FigureBoundary fallback={<p className="grid h-full place-items-center px-8 text-xl text-[var(--text-secondary)]">{copy.noWebgl}</p>}>
-          <PresenceCanvas
-            state={turn.state}
-            expression={turn.expression}
-            mouth={mouth}
-            tier={tier}
-            gaze={privacy.cameraGaze ? gaze : null}
-            reducedMotion={reducedMotion}
-            onFps={setFps}
-          />
-        </FigureBoundary>
-        <div className="pointer-events-none absolute left-6 top-6 flex flex-col gap-2 text-lg">
-          <p className="tv-display text-3xl">{copy.title}</p>
-          {role ? <p>{role.disclosure} {role.name}</p> : null}
-          <p>{stateLabel}</p>
-          {simulated ? <p className="text-[var(--text-secondary)]">{copy.simulated}</p> : null}
-          {indicator !== 'off' ? (
-            <p className="flex items-center gap-2 text-[var(--accent-warm)]">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--accent-warm)]" aria-hidden="true" />
-              {indicator === 'both' ? copy.bothOn : indicator === 'camera' ? copy.cameraOn : copy.micOn}
-            </p>
-          ) : null}
+    <div className="tv presence-stage !p-0">
+      <Wallpaper kind={forecast?.kind ?? null} day={forecast?.day ?? true} />
+      <section className="presence-figure" onClick={wake}>
+        <div className="absolute inset-0">
+          <FigureBoundary fallback={<p className="grid h-full place-items-center px-8 text-xl text-[var(--text-secondary)]">{copy.noWebgl}</p>}>
+            <PresenceCanvas
+              state={turn.state}
+              expression={turn.expression}
+              mouth={mouth}
+              tier={tier}
+              gaze={privacy.cameraGaze ? gaze : null}
+              reducedMotion={reducedMotion}
+              onFps={setFps}
+            />
+          </FigureBoundary>
         </div>
-        {turn.state === 'SLEEPING' ? <p className="absolute bottom-24 left-6 text-lg text-[var(--text-secondary)]">{copy.sleepHint}</p> : null}
-        <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2">
+        <div className="presence-chrome pointer-events-none">
+          <div className="flex flex-col gap-1 text-base">
+            <p className="tv-display text-2xl">{copy.title}</p>
+            {role ? <p>{role.disclosure} {role.name}</p> : null}
+            <p>{stateLabel}</p>
+            {simulated ? <p className="text-[var(--text-secondary)]">{copy.simulated}</p> : null}
+          </div>
+          <p className="bg-[#151c22] px-3 py-2 text-base">{weatherLine}</p>
+        </div>
+        {turn.state === 'SLEEPING' ? <p className="pointer-events-none absolute bottom-[52dvh] left-4 text-base text-[var(--text-secondary)] lg:bottom-24">{copy.sleepHint}</p> : null}
+      </section>
+      <aside className="presence-panel flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className="bg-[var(--surface)] px-4 py-2 text-lg"
-            onClick={(event) => {
-              event.stopPropagation();
+            className="min-h-12 bg-[var(--surface)] px-4 py-2 text-base"
+            onClick={() => {
               setMicNote(null);
               setPrivacy((current) => setMicrophone(current, !current.microphone));
             }}
           >
             {privacy.microphone ? copy.stop : copy.talk}
           </button>
-          <label className="flex items-center gap-2 bg-[var(--surface)] px-4 py-2 text-lg" onClick={(event) => event.stopPropagation()}>
+          <label className="flex min-h-12 items-center gap-2 bg-[var(--surface)] px-4 py-2 text-base">
             <input
               type="checkbox"
               checked={privacy.cameraGaze}
@@ -322,16 +337,23 @@ export function PresenceScreen() {
                 setPrivacy((current) => setCameraGaze(current, event.target.checked));
               }}
             />
-            {copy.camera}
+            {copy.cameraShort}
           </label>
+          {weather.status === 'denied' ? (
+            <button type="button" className="min-h-12 px-4 py-2 text-base" onClick={weather.retry}>{outside.retry}</button>
+          ) : null}
         </div>
-      </section>
-      <aside className="flex flex-col gap-5 border-t border-[var(--border-subtle)] bg-[#1b242d] p-6 lg:border-l lg:border-t-0">
+        {indicator !== 'off' ? (
+          <p className="flex items-center gap-2 text-base text-[var(--accent-warm)]">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-[var(--accent-warm)]" aria-hidden="true" />
+            {indicator === 'both' ? copy.bothOn : indicator === 'camera' ? copy.cameraOn : copy.micOn}
+          </p>
+        ) : null}
         <div className="flex gap-4">
-          <Link href="/" className="text-lg text-[var(--text-secondary)]">{copy.back}</Link>
-          <Link href="/profiles" className="text-lg text-[var(--text-secondary)]">{copy.roleLink}</Link>
+          <Link href="/" className="text-base text-[var(--text-secondary)]">{copy.back}</Link>
+          <Link href="/profiles" className="text-base text-[var(--text-secondary)]">{copy.roleLink}</Link>
         </div>
-        <p className="min-h-16 text-2xl leading-snug" aria-live="polite">{turn.line}</p>
+        <p className="min-h-12 text-xl leading-snug" aria-live="polite">{turn.line}</p>
         {turn.speech === 'caption' ? <p className="text-lg text-[var(--text-secondary)]">{copy.caption}</p> : null}
         {turn.speech === 'gesture' ? <p className="text-lg text-[var(--text-secondary)]">{copy.gestureNote}</p> : null}
         {turn.state === 'ACTING' ? <p className="text-lg text-[var(--accent-warm)]">{copy.point}</p> : null}
@@ -384,10 +406,11 @@ export function PresenceScreen() {
             <button type="button" className="px-4 py-3 text-xl text-[var(--text-secondary)]" onClick={() => dispatch({ type: 'preview', line: copy.gestureLine })}>{copy.gesture}</button>
           ) : null}
         </div>
-        <p className="text-lg text-[var(--text-secondary)]">{copy.cameraHint}</p>
-        <p className="mt-auto text-lg text-[var(--text-secondary)]">
-          {fps === null ? copy.measuring : copy.performance(fps, copy.tiers[tier])}
-        </p>
+        <details className="text-base text-[var(--text-secondary)]">
+          <summary>{copy.camera}</summary>
+          <p className="mt-2">{copy.cameraHint}</p>
+          <p className="mt-2">{fps === null ? copy.measuring : copy.performance(fps, copy.tiers[tier])}</p>
+        </details>
       </aside>
     </div>
   );

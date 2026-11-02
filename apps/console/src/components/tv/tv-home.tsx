@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { api, type CommandResult, type Device, type Overview } from '@/lib/api';
+import { useDeviceWeather } from '@/components/device-weather';
 import { useFrame } from '@/components/shell';
+import { Wallpaper } from '@/components/wallpaper';
+import { weatherCopy } from '@/lib/device-weather';
 import { playableDestinations } from '@/lib/media';
 import { comfort, greeting, groundUtterance, matchRoom, places, ribbonFor, type StatusDevice } from '@/lib/room-status';
 import { moveFocus, restoreFocus, type FocusItem } from '@/lib/spatial';
@@ -40,9 +43,14 @@ export function TvHome() {
 }
 
 function Screen({ children, tv }: { children?: ReactNode; tv: TvCopy }) {
+  const weather = useDeviceWeather();
+  const forecast = weather.status === 'ready' ? weather.forecast : null;
   return (
-    <div className="tv flex min-h-screen flex-col">
-      {children ?? <p className="tv-display m-auto text-5xl">{tv.home}</p>}
+    <div className="tv relative flex min-h-[100dvh] flex-col overflow-x-hidden">
+      <Wallpaper kind={forecast?.kind ?? null} day={forecast?.day ?? true} />
+      <div className="relative z-10 flex min-h-[100dvh] flex-col">
+        {children ?? <p className="tv-display m-auto text-5xl">{tv.home}</p>}
+      </div>
     </div>
   );
 }
@@ -160,6 +168,8 @@ function FirstRun({
 function Stage({ tv }: { tv: TvCopy }) {
   const router = useRouter();
   const { overview, locale, refresh, error, copy } = useFrame();
+  const weather = useDeviceWeather();
+  const outside = weatherCopy(locale);
   const [now, setNow] = useState<Date | null>(null);
   const [overlay, setOverlay] = useState<Overlay>('none');
   const [focus, setFocus] = useState('nav-home');
@@ -216,14 +226,22 @@ function Stage({ tv }: { tv: TvCopy }) {
     }
   }
 
+  const forecast = weather.status === 'ready' ? weather.forecast : null;
+  const weatherLine = forecast
+    ? `${outside.outside} ${Math.round(forecast.celsius)}° · ${outside[forecast.kind]}`
+    : weather.status === 'denied'
+      ? outside.denied
+      : weather.status === 'unavailable'
+        ? outside.unavailable
+        : outside.locating;
   const label = place.id === 'otro' && place.custom.trim() ? place.custom.trim() : tv.places[place.id];
   const context = mood === 'comfortable' ? tv.comfortable : mood === 'watch' ? tv.watch : tv.noReadings;
   const playable = playableDestinations()[0];
 
   return (
     <div className="tv flex min-h-screen flex-col" onKeyDown={(event) => onArrows(event, items, active, setFocus, overlay === 'none' ? undefined : close)}>
-      <header className="flex items-center justify-between gap-6">
-        <div className="flex items-center gap-8">
+      <header className="tv-home-header flex items-start justify-between gap-6">
+        <div className="flex flex-wrap items-center gap-4">
           <p className="tv-display text-2xl tracking-wide">Physical OS</p>
           <nav className="flex flex-wrap gap-2" aria-label={tv.home}>
             <FocusButton id="nav-home" onClick={close}>{tv.home}</FocusButton>
@@ -232,7 +250,9 @@ function Stage({ tv }: { tv: TvCopy }) {
             <FocusButton id="nav-spaces" onClick={() => open('spaces', 'place-sala')}>{tv.spaces}</FocusButton>
           </nav>
         </div>
-        <div className="flex items-center gap-5 text-lg text-[var(--text-secondary)]">
+        <div className="tv-home-tools flex items-center gap-5 text-lg text-[var(--text-secondary)]">
+          <span>{weatherLine}</span>
+          {weather.status === 'denied' ? <button type="button" className="tv-target min-h-11 px-3" onClick={weather.retry}>{outside.retry}</button> : null}
           <span>{error ? tv.offline : tv.local}</span>
           <span>{mic === 'on' ? tv.listening : tv.micOff}</span>
           <time className="text-[var(--text-primary)]" dateTime={now?.toISOString()}>{now ? now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : '––:––'}</time>

@@ -165,6 +165,99 @@ dialog::backdrop {
   padding: clamp(24px, 2vw, 40px);
 }
 
+.presence-sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #101419;
+}
+
+.presence-sky-top,
+.presence-sky-band,
+.presence-sky-ground,
+.presence-sky-disc,
+.presence-sky-cloud,
+.presence-sky-rain {
+  position: absolute;
+}
+
+.presence-sky-top { inset: 0 0 42% 0; background: #1b242d; }
+.presence-sky-band { left: 0; right: 0; bottom: 28%; height: 18%; background: #26323d; }
+.presence-sky-ground { left: 0; right: 0; bottom: 0; height: 32%; background: #101419; border-top: 1px solid #394751; }
+.presence-sky-disc { width: 72px; height: 72px; right: 12%; top: 14%; background: #e5c89d; border-radius: 2px; }
+.presence-sky-cloud { width: 28%; height: 46px; left: 10%; top: 22%; background: #303d47; border-radius: 2px; }
+.presence-sky-rain { left: 18%; top: 34%; width: 2px; height: 28%; background: #394751; box-shadow: 28px 0 #394751, 64px 0 #394751, 108px 0 #394751, 150px 0 #394751, 196px 0 #394751, 240px 0 #394751; }
+
+.presence-sky-idle .presence-sky-disc,
+.presence-sky-cloud .presence-sky-disc,
+.presence-sky-cloud-night .presence-sky-disc,
+.presence-sky-rain .presence-sky-disc,
+.presence-sky-snow .presence-sky-disc,
+.presence-sky-thunder .presence-sky-disc,
+.presence-sky-clear-day .presence-sky-cloud,
+.presence-sky-clear-night .presence-sky-cloud,
+.presence-sky-idle .presence-sky-cloud,
+.presence-sky-clear-day .presence-sky-rain,
+.presence-sky-clear-night .presence-sky-rain,
+.presence-sky-cloud .presence-sky-rain,
+.presence-sky-cloud-night .presence-sky-rain,
+.presence-sky-snow .presence-sky-rain,
+.presence-sky-thunder .presence-sky-rain,
+.presence-sky-idle .presence-sky-rain { display: none; }
+
+.presence-sky-clear-night .presence-sky-top { background: #0c1013; }
+.presence-sky-clear-night .presence-sky-band { background: #151c22; }
+.presence-sky-clear-night .presence-sky-disc { width: 36px; height: 36px; background: #e7eef0; }
+.presence-sky-cloud .presence-sky-top,
+.presence-sky-cloud-night .presence-sky-top { background: #151c22; }
+.presence-sky-cloud-night .presence-sky-band { background: #1b242d; }
+.presence-sky-rain .presence-sky-top { background: #12181d; }
+.presence-sky-rain .presence-sky-band { background: #1b242d; }
+.presence-sky-snow .presence-sky-top { background: #1b242d; }
+.presence-sky-snow .presence-sky-band { background: #303d47; }
+.presence-sky-snow .presence-sky-cloud { background: #394751; }
+.presence-sky-thunder .presence-sky-top { background: #12181d; }
+.presence-sky-thunder .presence-sky-band { background: #26323d; border-top: 8px solid #e5c89d; }
+
+.presence-stage { position: relative; min-height: 100dvh; overflow: hidden; }
+.presence-figure { position: absolute; inset: 0; }
+.presence-panel {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 48dvh;
+  overflow: auto;
+  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  background: #151c22;
+  border-top: 1px solid #394751;
+}
+.presence-chrome {
+  position: absolute;
+  z-index: 2;
+  left: 16px;
+  right: 16px;
+  top: max(16px, env(safe-area-inset-top));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .presence-stage { display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
+  .presence-figure { position: relative; height: 100dvh; }
+  .presence-panel {
+    position: relative;
+    max-height: none;
+    height: 100dvh;
+    border-top: 0;
+    border-left: 1px solid #394751;
+  }
+}
+
 @media (max-width: 760px) {
   .tv {
     padding: 20px 16px 28px;
@@ -172,6 +265,22 @@ dialog::backdrop {
 
   .tv-display {
     letter-spacing: 0;
+  }
+
+  .tv-home-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tv-home-tools {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 1rem;
+  }
+
+  .tv-page .tv-display {
+    font-size: 2rem;
   }
 }
 

@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Presence rendering
 
-Draw one presence. The console shows the MIT mesh as a translucent figure when it loads, with a particle shell on that surface. `sampleFigure` is the fallback. Do not draw a video, a sprite sheet, or a solid cartoon texture. Do not mirror the mesh to force it to face the camera; use the declared axes in `femaleAdult01Axes`.
+Draw one presence. When `female-adult-01.glb` loads, the console draws that skinned mesh with its own materials: skin, hair, eyes, and clothes. The glTF pose is already upright and faces +Z. Do not apply a second rotation and do not replace those materials with a flat color or a particle shell. `sampleFigure` is the fallback only when the file fails to load or its measured bind axis does not match. Do not draw a video or a sprite sheet. Do not mirror the mesh.
 
 - Palette: background `#101419`, particles `#B5D7D2`, `#DCEAF0`, `#5E859A`, highlights `#E5C89D`.
 - High, medium, and low tiers must change the particle budget. A measured frame rate below 24 selects low.

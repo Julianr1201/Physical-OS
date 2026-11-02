@@ -5,23 +5,26 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import {
   extentMatchesUp,
   femaleAdult01Axes,
-  frameAvatar,
-  shellBudget,
   type ExpressionName,
   type PerformanceTier,
 } from '@physical-os/presence';
 import * as THREE from 'three';
-import { ambientMist, headCenter, sampleSkinnedSurface } from './mesh-sample';
+import { headCenter } from './mesh-sample';
 
 const modelUrl = '/presence/female-adult-01.glb';
 const yawScratch = new THREE.Quaternion();
 const pitchScratch = new THREE.Quaternion();
 
+export interface MaterialFade {
+  material: THREE.Material;
+  opacity: number;
+  transparent: boolean;
+  depthWrite: boolean;
+}
+
 export interface HologramModel {
   group: THREE.Group;
-  shell: THREE.Mesh;
-  ambient: ReturnType<typeof ambientMist>;
-  hologram: THREE.MeshBasicMaterial;
+  materials: MaterialFade[];
   bones: FacialBones;
   loadMs: number;
   baseY: number;
@@ -45,7 +48,7 @@ interface FacialBones {
   corners: BonePose[];
 }
 
-export async function loadHologram(tier: PerformanceTier): Promise<HologramModel> {
+export async function loadHologram(_tier: PerformanceTier): Promise<HologramModel> {
   const started = performance.now();
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
@@ -57,43 +60,17 @@ export async function loadHologram(tier: PerformanceTier): Promise<HologramModel
   if (!extentMatchesUp(measured.min, measured.max, femaleAdult01Axes.up)) {
     throw new Error('The presence mesh is not standing on its declared axis.');
   }
-  const frame = frameAvatar(femaleAdult01Axes, measured.center);
   const group = new THREE.Group();
   group.add(gltf.scene);
-  const basis = new THREE.Matrix4().makeBasis(
-    new THREE.Vector3(frame.right[0], frame.up[0], frame.face[0]),
-    new THREE.Vector3(frame.right[1], frame.up[1], frame.face[1]),
-    new THREE.Vector3(frame.right[2], frame.up[2], frame.face[2]),
-  );
-  group.quaternion.setFromRotationMatrix(basis);
-  group.position.set(frame.position[0], frame.position[1], frame.position[2]);
-  const hologram = createHologramMaterial(tier);
-  for (const mesh of meshes) {
-    replaceMaterial(mesh, hologram);
-    mesh.frustumCulled = false;
-  }
-  const shellSample = sampleSkinnedSurface(meshes, shellBudget(tier), femaleAdult01Axes.up);
-  const shell = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }));
-  shell.visible = false;
-  shell.name = 'presence-shell';
-  if (shellSample.count > 0) {
-    shell.geometry.dispose();
-    shell.geometry = createShellGeometry(shellSample.positions, shellSample.kind, shellSample.side);
-    shell.visible = true;
-    shell.frustumCulled = false;
-    shell.renderOrder = 2;
-    group.add(shell);
-  }
+  for (const mesh of meshes) mesh.frustumCulled = false;
   group.updateMatrixWorld(true);
   const bones = cacheBones(gltf.scene);
   return {
     group,
-    shell,
-    ambient: ambientMist(),
-    hologram,
+    materials: collectMaterials(meshes),
     bones,
     loadMs: Math.round(performance.now() - started),
-    baseY: frame.position[1],
+    baseY: 0,
   };
 }
 
@@ -123,16 +100,35 @@ export function poseHologram(
   for (const brow of model.bones.brows) applyBone(brow, 0, input.brow * 0.12);
   model.bones.corners.forEach((corner, index) => applyBone(corner, (index === 0 ? 1 : -1) * smile, 0));
   model.group.position.y = model.baseY + breath;
-  model.hologram.opacity = (tierOpacity(model.hologram) ?? 0.78) * input.opacity;
+  applyPresenceFade(model.materials, input.opacity);
+}
+
+export function applyPresenceFade(materials: MaterialFade[], factor: number): void {
+  for (const entry of materials) {
+    if (factor >= 0.85) {
+      entry.material.opacity = entry.opacity;
+      entry.material.transparent = entry.transparent;
+      entry.material.depthWrite = entry.depthWrite;
+      continue;
+    }
+    entry.material.opacity = entry.opacity * factor;
+    entry.material.transparent = true;
+    entry.material.depthWrite = factor > 0.6 && entry.depthWrite;
+  }
 }
 
 export function disposeHologram(model: HologramModel): void {
-  model.hologram.dispose();
-  model.shell.geometry.dispose();
+  const disposed = new Set<THREE.Material>();
   model.group.traverse((object) => {
     const mesh = object as THREE.Mesh;
-    if (!mesh.isMesh || mesh === model.shell) return;
+    if (!mesh.isMesh) return;
     mesh.geometry?.dispose();
+    const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const material of list) {
+      if (disposed.has(material)) continue;
+      disposed.add(material);
+      disposeMaterial(material);
+    }
   });
 }
 
@@ -180,37 +176,28 @@ function findSkins(root: THREE.Object3D): THREE.SkinnedMesh[] {
   return found;
 }
 
-function replaceMaterial(mesh: THREE.SkinnedMesh, material: THREE.Material): void {
-  const previous = mesh.material;
-  mesh.material = material;
-  const list = Array.isArray(previous) ? previous : [previous];
-  for (const item of list) item.dispose();
+function collectMaterials(meshes: THREE.SkinnedMesh[]): MaterialFade[] {
+  const seen = new Set<THREE.Material>();
+  const materials: MaterialFade[] = [];
+  for (const mesh of meshes) {
+    const list = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const material of list) {
+      if (seen.has(material)) continue;
+      seen.add(material);
+      materials.push({
+        material,
+        opacity: material.opacity,
+        transparent: material.transparent,
+        depthWrite: material.depthWrite,
+      });
+    }
+  }
+  return materials;
 }
 
-function createShellGeometry(positions: Float32Array, kind: Float32Array, side: Float32Array): THREE.InstancedBufferGeometry {
-  const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0]), 3));
-  geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]), 2));
-  geometry.setIndex([0, 1, 2, 0, 2, 3]);
-  geometry.setAttribute('instanceOffset', new THREE.InstancedBufferAttribute(positions, 3));
-  geometry.setAttribute('aKind', new THREE.InstancedBufferAttribute(kind, 1));
-  geometry.setAttribute('aSide', new THREE.InstancedBufferAttribute(side, 1));
-  geometry.instanceCount = positions.length / 3;
-  return geometry;
-}
-
-function createHologramMaterial(tier: PerformanceTier): THREE.MeshBasicMaterial {
-  const material = new THREE.MeshBasicMaterial({
-    color: '#B5D7D2',
-    transparent: true,
-    opacity: tier === 'low' ? 0.94 : 0.8,
-    side: THREE.DoubleSide,
-  });
-  material.userData.baseOpacity = material.opacity;
-  return material;
-}
-
-function tierOpacity(material: THREE.MeshBasicMaterial): number {
-  const base = material.userData.baseOpacity;
-  return typeof base === 'number' ? base : material.opacity;
+function disposeMaterial(material: THREE.Material): void {
+  for (const value of Object.values(material)) {
+    if (value instanceof THREE.Texture) value.dispose();
+  }
+  material.dispose();
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { messages, type Locale } from '@/lib/i18n';
+import { safeNext } from '@/lib/safe-next';
 import { tvMessages } from '@/lib/tv-copy';
 
 export default function LoginPage() {
@@ -16,10 +17,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const stored = window.localStorage.getItem('pos-locale');
-    const next: Locale = stored === 'es' || stored === 'en' ? stored : navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en';
-    setLocale(next);
+    const preferred: Locale = stored === 'es' || stored === 'en' ? stored : navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en';
+    setLocale(preferred);
+    const next = safeNext(new URLSearchParams(window.location.search).get('next'));
     void api<{ authenticated: boolean; enrolled: boolean }>('/api/v1/session').then((session) => {
-      if (session.authenticated) router.replace('/');
+      if (session.authenticated) router.replace(next);
       else if (!session.enrolled) router.replace('/');
     });
   }, [router]);
@@ -33,7 +35,7 @@ export default function LoginPage() {
         onSubmit={(event) => {
           event.preventDefault();
           void api('/api/v1/session', { method: 'POST', body: JSON.stringify({ password }) })
-            .then(() => router.replace(new URLSearchParams(window.location.search).get('next') === '/kiosk' ? '/kiosk' : '/'))
+            .then(() => router.replace(safeNext(new URLSearchParams(window.location.search).get('next'))))
             .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : copy.notVerified));
         }}
       >
