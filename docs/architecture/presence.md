@@ -1,6 +1,6 @@
 # Presence
 
-The conversational surface draws the digital-human mesh in the browser. If that file fails, the console falls back to the Microsoft mesh, and to a point cloud only if that mesh also fails. The Microsoft mesh is not the character. It is not a video and it does not replace the television home. Open it at `/presence`, or from the home “ask” control. On a phone the figure fills the viewport and the microphone, camera, and reply stay in a bottom sheet. The backdrop follows the device’s outside forecast and is separate from the simulated room climate.
+The conversational surface draws Divine Spark, a local canvas light mounted once in the console shell. The human meshes stay in the tree and are not drawn. See `docs/architecture/divine-spark.md`. It is not a video and it does not replace the television home. Open it at `/presence`, or from the home “ask” control. On a phone the figure fills the viewport and the microphone, camera, and reply stay in a bottom sheet. The backdrop follows the device’s outside forecast and is separate from the simulated room climate.
 
 `packages/presence` owns the behavior model, privacy defaults, performance tiers, and the sampled figure. It does not import Three.js and it does not call devices. `apps/console` draws the figure and calls the existing interpret and approve routes.
 
@@ -22,7 +22,7 @@ The microphone and the camera start off. Enabling either shows a visible indicat
 
 ## Performance
 
-The figure loaded by `/presence` is `apps/console/public/presence/digital-human/female-executive.glb`. The glTF pose is Y-up and faces +Z. The console keeps the authored materials, plays the Idle clip before showing the mesh, and frames the head and shoulders. Speech moves Oculus viseme morph targets. `jawOpen` is only a small companion on open vowels. High, medium, and low change the pixel ratio. Low also skips the additive eye aim. There is one mesh, not three geometry variants. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
+`/presence` draws Divine Spark on a local canvas. The executive glTF remains in the repository and is not shown. High, medium, and low change how many filaments the spark draws. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
 
 If this file fails to load, the Microsoft mesh is the fallback, and the point sample follows only if that mesh fails too. Conversation text does not wait for the mesh.
 

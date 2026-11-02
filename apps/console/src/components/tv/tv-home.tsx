@@ -263,6 +263,7 @@ function Stage({ tv }: { tv: TvCopy }) {
       <section className="mt-10 max-w-5xl">
         <h1 className="tv-display text-[clamp(48px,3.4vw,72px)] leading-none">{now ? greeting(now.getHours(), locale) : tv.welcome}</h1>
         <p className="mt-4 text-[clamp(22px,1.6vw,32px)] text-[var(--text-secondary)]">{label} · {context}</p>
+        <p className="mt-2 text-lg text-[var(--text-primary)]">{tv.spark}</p>
         <p className="mt-3 text-lg text-[var(--text-secondary)]">{devices.length} · {copy.devices}</p>
       </section>
 

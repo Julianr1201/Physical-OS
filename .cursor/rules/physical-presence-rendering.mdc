@@ -1,16 +1,16 @@
 ---
-description: Presence rendering for the conversational figure
-globs: "packages/presence/**/*.ts,apps/console/src/components/presence/**/*.{ts,tsx}"
+description: Presence rendering for Divine Spark
+globs: "packages/presence/**/*.ts,apps/console/src/components/presence/**/*.{ts,tsx},apps/console/src/components/spark/**/*.{ts,tsx}"
 alwaysApply: false
 ---
 
 # Presence rendering
 
-Draw one presence. The primary file is `female-executive.glb`. Keep its materials. Play Idle before the mesh becomes visible. Drive the mouth from viseme morph targets. `jawOpen` is not the lip-sync channel. The Microsoft mesh and `sampleFigure` are fallbacks only when that file fails. Do not draw a video or a sprite sheet. Do not mirror the mesh.
+Draw Divine Spark once, from the console shell, with canvas 2D. Keep one conversation and one microphone. Do not draw the human glTF as the presence. Do not add a second speech engine on a page.
 
-- Palette: background `#101419`, particles `#B5D7D2`, `#DCEAF0`, `#5E859A`, highlights `#E5C89D`.
-- High, medium, and low tiers change the pixel ratio. A measured frame rate below 24 selects low.
-- `digitalHumanComplete` stays false until unique clips and mesh variants exist.
-- Label simulated homes as simulation. A missing WebGL context leaves the text conversation in place.
+- The microphone stays off until the operator turns it on.
+- A Spanish reply is spoken only when a female Spanish voice is selected. Otherwise leave the line on screen.
+- High, medium, and low tiers change the filament count. A measured frame rate below 24 selects low.
+- Label simulated homes as simulation.
 
-Do not add a neon bloom pass or a second full-screen post effect. Do not describe this export as a finished character.
+Do not add a neon bloom pass. Do not describe Piper or a Mexican accent as present unless a listened test recorded that voice.

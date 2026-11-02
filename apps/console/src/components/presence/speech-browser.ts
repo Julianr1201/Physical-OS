@@ -83,13 +83,17 @@ export function speakBrowser(
   lang: string,
   signal: AbortSignal,
   onBoundary: (charIndex: number) => void,
+  voice: { name: string; lang: string } | null = null,
 ): Promise<'ended' | 'cancelled'> {
   if (signal.aborted || typeof window.speechSynthesis === 'undefined' || typeof window.SpeechSynthesisUtterance !== 'function') {
     return Promise.resolve('cancelled');
   }
+  if (lang.toLowerCase().startsWith('es') && !voice) return Promise.resolve('cancelled');
   return new Promise((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
+    utterance.lang = voice?.lang || lang;
+    const match = voice ? window.speechSynthesis.getVoices().find((item) => item.name === voice.name && item.lang === voice.lang) : undefined;
+    if (match) utterance.voice = match;
     utterance.rate = 1;
     utterance.onboundary = (event) => onBoundary(event.charIndex ?? 0);
     const finish = (result: 'ended' | 'cancelled') => {

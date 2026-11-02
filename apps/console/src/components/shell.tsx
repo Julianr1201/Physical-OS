@@ -8,6 +8,7 @@ import { api, ApiError, type Overview } from '@/lib/api';
 import { messages, type Copy, type Locale } from '@/lib/i18n';
 import { loginHref } from '@/lib/safe-next';
 import { DeviceWeatherProvider } from '@/components/device-weather';
+import { SparkSession } from '@/components/spark/spark-session';
 
 interface Frame {
   overview: Overview | null;
@@ -139,6 +140,7 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <FrameContext.Provider value={value}>
       <DeviceWeatherProvider>
+      <SparkSession>
       {palette ? (
         <dialog open className="mt-16 p-4" aria-label={copy.command} onClose={() => setPalette(false)}>
           <form
@@ -228,6 +230,7 @@ export function Shell({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
+      </SparkSession>
       </DeviceWeatherProvider>
     </FrameContext.Provider>
   );

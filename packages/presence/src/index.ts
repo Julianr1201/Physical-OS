@@ -51,3 +51,13 @@ export {
   type LipsyncMode,
   type VisemeMark,
 } from './digital-human.js';
+export {
+  decayLevel,
+  sparkDensity,
+  sparkMood,
+  sparkMoods,
+  sparkRuntime,
+  spanishFemaleVoice,
+  type SparkLink,
+  type SparkMood,
+} from './spark.js';

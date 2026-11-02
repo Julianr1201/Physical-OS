@@ -34,11 +34,13 @@ export interface PresenceCopy {
   gestureNote: string;
   sleepHint: string;
   roleLink: string;
+  sparkHere: string;
+  voiceGap: string;
 }
 
 const spanish: PresenceCopy = {
   back: 'Inicio',
-  title: 'Presencia',
+  title: 'Divine Spark',
   talk: 'Hablar',
   stop: 'Apagar micrófono',
   interrupt: 'Interrumpir',
@@ -80,13 +82,15 @@ const spanish: PresenceCopy = {
   gestureLine: 'Así se mueve la boca. Esto no es voz.',
   caption: 'Sin síntesis de voz',
   gestureNote: 'Gesto, sin audio',
-  sleepHint: 'Toca la figura para volver.',
+  sleepHint: 'Toca para volver.',
   roleLink: 'Profesión',
+  sparkHere: 'Estoy aquí.',
+  voiceGap: 'No hay una voz femenina en español en este equipo. Piper no está instalado. La respuesta queda escrita.',
 };
 
 const english: PresenceCopy = {
   back: 'Home',
-  title: 'Presence',
+  title: 'Divine Spark',
   talk: 'Talk',
   stop: 'Turn microphone off',
   interrupt: 'Interrupt',
@@ -128,8 +132,10 @@ const english: PresenceCopy = {
   gestureLine: 'This is how the mouth moves. It is not speech.',
   caption: 'No speech synthesis',
   gestureNote: 'Gesture, no audio',
-  sleepHint: 'Tap the figure to return.',
+  sleepHint: 'Tap to return.',
   roleLink: 'Profession',
+  sparkHere: 'I am here.',
+  voiceGap: 'This device has no female Spanish voice. Piper is not installed. The reply stays on screen.',
 };
 
 export function presenceCopy(locale: 'en' | 'es'): PresenceCopy {

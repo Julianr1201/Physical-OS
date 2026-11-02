@@ -246,16 +246,52 @@ dialog::backdrop {
   gap: 12px;
 }
 
-@media (min-width: 1024px) {
-  .presence-stage { display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
-  .presence-figure { position: relative; height: 100dvh; }
-  .presence-panel {
-    position: relative;
-    max-height: none;
-    height: 100dvh;
-    border-top: 0;
-    border-left: 1px solid #394751;
-  }
+.presence-chrome {
+  z-index: 30;
+  position: fixed;
+}
+.presence-caption {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: 46dvh;
+  width: min(40rem, calc(100% - 32px));
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 1.5rem;
+  line-height: 1.35;
+  pointer-events: none;
+}
+.presence-caption-low { bottom: 40dvh; font-size: 1rem; color: var(--text-secondary); }
+.presence-dock {
+  position: fixed;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 42dvh;
+  overflow: auto;
+  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  background: #151c22;
+  border-top: 1px solid #394751;
+}
+.spark-immersive {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.spark-compact {
+  position: fixed;
+  z-index: 40;
+  left: max(16px, env(safe-area-inset-left));
+  top: 42%;
+  width: 72px;
+  height: 72px;
+}
+.spark-hit {
+  position: absolute;
+  inset: 0;
 }
 
 @media (max-width: 760px) {
