@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   async rewrites() {
+    if (process.env.VERCEL === '1') return [];
     const api = process.env.PHYSICAL_OS_API_ORIGIN ?? 'http://127.0.0.1:4747';
     return [{ source: '/api/:path*', destination: `${api}/api/:path*` }];
   },

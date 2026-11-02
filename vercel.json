@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "console": {
+      "root": "apps/console",
+      "framework": "nextjs",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+    },
+    "server": {
+      "root": "apps/server",
+      "framework": "fastify",
+      "entrypoint": "src/main.ts",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "console"
+      }
+    }
+  ]
+}
