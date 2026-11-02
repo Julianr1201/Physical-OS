@@ -52,6 +52,7 @@ export function ProfilesScreen() {
   const locale = frame.locale;
   const copy = locale === 'es' ? spanish : english;
   const [catalog, setCatalog] = useState<Manifest[]>([]);
+  const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [avatars, setAvatars] = useState<Choice[]>([]);
   const [voices, setVoices] = useState<Choice[]>([]);
   const [industry, setIndustry] = useState<string | null>(null);
@@ -67,7 +68,6 @@ export function ProfilesScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [activeRole, setActiveRole] = useState<string | null>(null);
   const profile = catalog.find((item) => item.profileId === profileId) ?? null;
-  const industries = [...new Set(catalog.map((item) => item.industry))];
   const professions = [...new Set(catalog.filter((item) => item.industry === industry).map((item) => item.profession))];
   const specializations = catalog.filter((item) => item.industry === industry && item.profession === profession);
 
@@ -77,8 +77,12 @@ export function ProfilesScreen() {
         setCatalog(data.profiles);
         setAvatars(data.avatars);
         setVoices(data.voices);
+        setCatalogState('ready');
       })
-      .catch((error: unknown) => setMessage(error instanceof ApiError ? error.message : copy.unavailable));
+      .catch((error: unknown) => {
+        setCatalogState('error');
+        setMessage(error instanceof ApiError ? error.message : copy.unavailable);
+      });
     void api<{ role: Text } | null>('/api/v1/profiles/active')
       .then((data) => setActiveRole(data?.role[locale] ?? null))
       .catch(() => setActiveRole(null));
@@ -195,11 +199,30 @@ export function ProfilesScreen() {
       </ol>
 
       {step === 0 ? (
-        <div className="mt-8 flex flex-wrap gap-3">
-          {industries.map((item) => (
-            <button key={item} type="button" className="bg-[var(--surface)] px-5 py-4 text-xl" onClick={() => { setIndustry(item); setProfession(null); setProfileId(null); setStep(1); }}>
-              {item}
-            </button>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {catalogState === 'error' ? <p className="text-xl text-[var(--text-secondary)]">{copy.unavailable}</p> : null}
+          {catalog.map((item) => (
+            <article key={item.profileId} className="grid gap-3 bg-[var(--surface)] p-5">
+              <p className="text-sm uppercase tracking-[0.14em] text-[var(--text-secondary)]">{item.industry} · {item.profession}</p>
+              <h2 className="tv-display text-3xl">{item.displayName[locale]}</h2>
+              <p className="text-lg text-[var(--text-secondary)]">{item.description[locale]}</p>
+              <p className="text-lg">{copy.review}</p>
+              <ul className="grid gap-1 text-lg">
+                {item.requiredPermissions.map((permission) => <li key={permission}>{permission}</li>)}
+              </ul>
+              <p className="text-lg">{copy.systems}</p>
+              <ul className="grid gap-1 text-lg text-[var(--text-secondary)]">
+                {(item.knowledgeSources.length > 0 ? item.knowledgeSources : [copy.none]).map((source) => (
+                  <li key={source}>{source} · {copy.simulated}</li>
+                ))}
+              </ul>
+              <p className="text-lg">{activeRole === item.displayName[locale] ? copy.active : copy.inactive}</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="bg-[var(--surface-raised)] px-4 py-3 text-lg" onClick={() => { chooseProfile(item.profileId); setIndustry(item.industry); setProfession(item.profession); setStep(3); }}>{copy.configure}</button>
+                <button type="button" className="bg-[var(--surface-raised)] px-4 py-3 text-lg" onClick={() => { chooseProfile(item.profileId); setIndustry(item.industry); setProfession(item.profession); setStep(5); }}>{copy.review}</button>
+                <button type="button" className="px-4 py-3 text-lg" onClick={() => { chooseProfile(item.profileId); setIndustry(item.industry); setProfession(item.profession); setStep(6); }}>{copy.try}</button>
+              </div>
+            </article>
           ))}
         </div>
       ) : null}
@@ -376,6 +399,8 @@ const english = {
   confirm: 'Confirm order',
   cancel: 'Cancel',
   unavailable: 'The profile service is unavailable.',
+  inactive: 'Not active',
+  configure: 'Configure',
   steps: ['Industry', 'Profession', 'Specialization', 'Appearance', 'Systems', 'Permissions', 'Test', 'Active'],
 };
 
@@ -399,5 +424,7 @@ const spanish = {
   confirm: 'Confirmar pedido',
   cancel: 'Cancelar',
   unavailable: 'El servicio de perfiles no está disponible.',
+  inactive: 'Inactivo',
+  configure: 'Configurar',
   steps: ['Industria', 'Profesión', 'Especialización', 'Apariencia', 'Sistemas', 'Permisos', 'Prueba', 'Activo'],
 };

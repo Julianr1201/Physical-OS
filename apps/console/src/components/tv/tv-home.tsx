@@ -159,7 +159,7 @@ function FirstRun({
 
 function Stage({ tv }: { tv: TvCopy }) {
   const router = useRouter();
-  const { overview, locale, refresh, error } = useFrame();
+  const { overview, locale, refresh, error, copy } = useFrame();
   const [now, setNow] = useState<Date | null>(null);
   const [overlay, setOverlay] = useState<Overlay>('none');
   const [focus, setFocus] = useState('nav-home');
@@ -243,6 +243,7 @@ function Stage({ tv }: { tv: TvCopy }) {
       <section className="mt-10 max-w-5xl">
         <h1 className="tv-display text-[clamp(48px,3.4vw,72px)] leading-none">{now ? greeting(now.getHours(), locale) : tv.welcome}</h1>
         <p className="mt-4 text-[clamp(22px,1.6vw,32px)] text-[var(--text-secondary)]">{label} · {context}</p>
+        <p className="mt-3 text-lg text-[var(--text-secondary)]">{devices.length} · {copy.devices}</p>
       </section>
 
       {ribbon.length > 0 ? (
@@ -265,7 +266,7 @@ function Stage({ tv }: { tv: TvCopy }) {
           </button>
         ) : null}
         <div className="mt-6 flex flex-wrap gap-4">
-          <FocusButton id="assist" onClick={() => router.push('/presence')}>{tv.ask}</FocusButton>
+          <FocusButton id="assist" prominent onClick={() => router.push('/presence')}>{tv.ask}</FocusButton>
           <FocusButton id="profiles" onClick={() => router.push('/profiles')}>{tv.profiles}</FocusButton>
           {lights.length > 0 ? <FocusButton id="lights" onClick={() => open('lights', lights[0] ? `light-${lights[0].id}` : 'all-off')}>{tv.lights}</FocusButton> : null}
           {climate ? <FocusButton id="climate" onClick={() => open('climate', 'climate-close')}>{tv.climate}</FocusButton> : null}
@@ -511,9 +512,10 @@ function TvButton({ id, children, onClick, tone = 'accent', className = '', disa
   );
 }
 
-function FocusButton({ id, children, onClick }: { id: string; children: ReactNode; onClick: () => void }) {
+function FocusButton({ id, children, onClick, prominent = false }: { id: string; children: ReactNode; onClick: () => void; prominent?: boolean }) {
+  const tone = prominent ? 'bg-[var(--accent-primary)] px-6 text-[var(--bg-primary)]' : 'text-[var(--text-primary)]';
   return (
-    <button id={id} type="button" className="tv-target px-4 py-3 text-xl text-[var(--text-primary)]" onClick={onClick}>
+    <button id={id} type="button" className={`tv-target px-4 py-3 text-xl ${tone}`} onClick={onClick}>
       {children}
     </button>
   );

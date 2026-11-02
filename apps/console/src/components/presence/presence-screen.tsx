@@ -300,14 +300,38 @@ export function PresenceScreen() {
             </p>
           ) : null}
         </div>
-        {turn.state === 'SLEEPING' ? <p className="absolute bottom-6 left-6 text-lg text-[var(--text-secondary)]">{copy.sleepHint}</p> : null}
+        {turn.state === 'SLEEPING' ? <p className="absolute bottom-24 left-6 text-lg text-[var(--text-secondary)]">{copy.sleepHint}</p> : null}
+        <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            className="bg-[var(--surface)] px-4 py-2 text-lg"
+            onClick={(event) => {
+              event.stopPropagation();
+              setMicNote(null);
+              setPrivacy((current) => setMicrophone(current, !current.microphone));
+            }}
+          >
+            {privacy.microphone ? copy.stop : copy.talk}
+          </button>
+          <label className="flex items-center gap-2 bg-[var(--surface)] px-4 py-2 text-lg" onClick={(event) => event.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={privacy.cameraGaze}
+              onChange={(event) => {
+                setCameraNote(null);
+                setPrivacy((current) => setCameraGaze(current, event.target.checked));
+              }}
+            />
+            {copy.camera}
+          </label>
+        </div>
       </section>
       <aside className="flex flex-col gap-5 border-t border-[var(--border-subtle)] bg-[#1b242d] p-6 lg:border-l lg:border-t-0">
         <div className="flex gap-4">
           <Link href="/" className="text-lg text-[var(--text-secondary)]">{copy.back}</Link>
           <Link href="/profiles" className="text-lg text-[var(--text-secondary)]">{copy.roleLink}</Link>
         </div>
-        <p className="min-h-16 text-2xl leading-snug">{turn.line}</p>
+        <p className="min-h-16 text-2xl leading-snug" aria-live="polite">{turn.line}</p>
         {turn.speech === 'caption' ? <p className="text-lg text-[var(--text-secondary)]">{copy.caption}</p> : null}
         {turn.speech === 'gesture' ? <p className="text-lg text-[var(--text-secondary)]">{copy.gestureNote}</p> : null}
         {turn.state === 'ACTING' ? <p className="text-lg text-[var(--accent-warm)]">{copy.point}</p> : null}
@@ -334,16 +358,6 @@ export function PresenceScreen() {
           <button type="submit" className="bg-[var(--surface)] px-4 py-3 text-left text-xl">{copy.send}</button>
         </form>
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="bg-[var(--surface)] px-4 py-3 text-xl"
-            onClick={() => {
-              setMicNote(null);
-              setPrivacy((current) => setMicrophone(current, !current.microphone));
-            }}
-          >
-            {privacy.microphone ? copy.stop : copy.talk}
-          </button>
           {turn.state === 'SPEAKING' || turn.state === 'ACTING' || turn.state === 'THINKING' ? (
             <button type="button" className="bg-[var(--surface)] px-4 py-3 text-xl" onClick={() => dispatch({ type: 'interrupt' })}>{copy.interrupt}</button>
           ) : null}
@@ -370,20 +384,7 @@ export function PresenceScreen() {
             <button type="button" className="px-4 py-3 text-xl text-[var(--text-secondary)]" onClick={() => dispatch({ type: 'preview', line: copy.gestureLine })}>{copy.gesture}</button>
           ) : null}
         </div>
-        <label className="grid gap-2 text-lg">
-          <span className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={privacy.cameraGaze}
-              onChange={(event) => {
-                setCameraNote(null);
-                setPrivacy((current) => setCameraGaze(current, event.target.checked));
-              }}
-            />
-            {copy.camera}
-          </span>
-          <span className="text-[var(--text-secondary)]">{copy.cameraHint}</span>
-        </label>
+        <p className="text-lg text-[var(--text-secondary)]">{copy.cameraHint}</p>
         <p className="mt-auto text-lg text-[var(--text-secondary)]">
           {fps === null ? copy.measuring : copy.performance(fps, copy.tiers[tier])}
         </p>

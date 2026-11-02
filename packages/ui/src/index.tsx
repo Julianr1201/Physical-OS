@@ -15,15 +15,15 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { tone?: 'default' | 'brass' | 'danger' | 'quiet' }) {
   const tones = {
-    default: 'border-line bg-paper text-ink hover:border-ink',
-    brass: 'border-brass bg-brass text-white hover:opacity-90',
-    danger: 'border-clay text-clay hover:bg-clay hover:text-white',
+    default: 'border-line bg-paper text-ink hover:border-brass',
+    brass: 'border-brass bg-brass text-[var(--bg)] hover:opacity-90',
+    danger: 'border-clay text-clay hover:bg-clay hover:text-[var(--bg)]',
     quiet: 'border-transparent text-muted hover:text-ink',
   };
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center gap-2 border px-3 py-2 text-sm font-semibold tracking-wide disabled:cursor-not-allowed disabled:opacity-50 ${tones[tone]} ${props.className ?? ''}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-[2px] border px-3 py-2 text-sm font-semibold tracking-wide disabled:cursor-not-allowed disabled:opacity-50 ${tones[tone]} ${props.className ?? ''}`}
     >
       {children}
     </button>
@@ -32,7 +32,7 @@ export function Button({
 
 export function Panel({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section className="border border-line bg-paper">
+    <section className="rounded-[2px] border border-line bg-paper shadow-[var(--shadow)]">
       <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
         <h2 className="font-serif text-lg">{title}</h2>
         {action}
@@ -50,5 +50,5 @@ export function Pill({ children, tone = 'neutral' }: { children: ReactNode; tone
     danger: 'border-clay text-clay',
     sim: 'border-brass text-brass',
   };
-  return <span className={`inline-flex border px-2 py-0.5 text-xs uppercase tracking-[0.14em] ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-flex rounded-[2px] border px-2 py-0.5 text-xs uppercase tracking-[0.14em] ${tones[tone]}`}>{children}</span>;
 }

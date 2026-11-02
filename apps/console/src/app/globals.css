@@ -3,31 +3,37 @@
 @tailwind utilities;
 
 :root {
-  --paper: #f4f1ea;
+  --bg: #0c1013;
+  --paper: #151c22;
+  --ink: #e7eef0;
+  --muted: #8b9aa3;
+  --line: #2a3842;
+  --brass: #c6a27a;
+  --pine: #8fbfa4;
+  --clay: #e0a097;
+  --radius: 2px;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  --motion: 160ms;
+  color-scheme: dark;
+}
+
+.light {
+  --bg: #f3f0e8;
+  --paper: #fbf9f4;
   --ink: #1c1915;
   --muted: #5e584e;
   --line: #ddd6c8;
   --brass: #8a5a2b;
   --pine: #1f4d3a;
   --clay: #8d3b32;
+  --shadow: 0 12px 28px rgba(28, 25, 21, 0.08);
   color-scheme: light;
 }
 
-.dark {
-  --paper: #141612;
-  --ink: #ece7dc;
-  --muted: #b7b1a4;
-  --line: #2c312b;
-  --brass: #d2b48c;
-  --pine: #8fbfa4;
-  --clay: #e0a097;
-  color-scheme: dark;
-}
-
 body {
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
-  font-family: "Source Sans 3", sans-serif;
+  font-family: Inter, "Source Sans 3", sans-serif;
 }
 
 :focus-visible {
@@ -38,8 +44,9 @@ body {
 input, select, textarea {
   background: transparent;
   border: 1px solid var(--line);
+  border-radius: var(--radius);
   color: inherit;
-  padding: 0.5rem 0.65rem;
+  padding: 0.55rem 0.7rem;
   width: 100%;
 }
 
@@ -52,6 +59,8 @@ dialog {
   background: var(--paper);
   color: var(--ink);
   border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   padding: 0;
   max-width: 36rem;
   width: calc(100% - 2rem);
@@ -166,9 +175,23 @@ dialog::backdrop {
   }
 }
 
+.studio-nav a[aria-current='page'] {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: inset 2px 0 0 var(--brass);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a, button {
+    transition: background-color var(--motion) ease, color var(--motion) ease, transform var(--motion) ease;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tv .tv-tile,
-  .tv .tv-panel {
+  .tv .tv-panel,
+  a,
+  button {
     transition: none;
   }
 

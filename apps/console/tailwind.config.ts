@@ -16,7 +16,7 @@ export default {
       },
       fontFamily: {
         sans: ['"Source Sans 3"', 'sans-serif'],
-        serif: ['"Source Serif 4"', 'Georgia', 'serif'],
+        serif: ['Manrope', 'Inter', 'sans-serif'],
       },
     },
   },
