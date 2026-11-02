@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
   advanceBlink,
@@ -15,7 +15,7 @@ import {
   type PresenceState,
 } from '@physical-os/presence';
 import * as THREE from 'three';
-import { loadPresenceMesh } from './mesh-sample';
+import { disposeHologram, loadHologram, poseHologram, type HologramModel } from './hologram-avatar';
 
 const vertexShader = /* glsl */ `
 attribute vec3 instanceOffset;
@@ -109,6 +109,7 @@ export function PresenceFigure({
   gaze,
   reducedMotion,
   onFps,
+  onReady,
 }: {
   state: PresenceState;
   expression: ExpressionName;
@@ -117,6 +118,7 @@ export function PresenceFigure({
   gaze: { x: number; y: number } | null;
   reducedMotion: boolean;
   onFps: (fps: number) => void;
+  onReady?: (loadMs: number) => void;
 }) {
   const head = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);
@@ -127,22 +129,33 @@ export function PresenceFigure({
   const reported = useRef(false);
   const bodyEnabled = tier !== 'low';
   const procedural = useMemo(() => sampleFigure(tier === 'high' ? 8000 : tier === 'medium' ? 3600 : 1400, { body: bodyEnabled }), [tier, bodyEnabled]);
-  const [meshSample, setMeshSample] = useState<FigureSample | null>(null);
+  const [model, setModel] = useState<HologramModel | null>(null);
+  const readyRef = useRef(onReady);
+  readyRef.current = onReady;
   useEffect(() => {
     let cancel = false;
-    const count = tier === 'high' ? 12000 : tier === 'medium' ? 6000 : 2400;
-    loadPresenceMesh(count)
-      .then((sample) => {
-        if (!cancel) setMeshSample(sample);
+    let active: HologramModel | null = null;
+    loadHologram(tier)
+      .then((loaded) => {
+        if (cancel) {
+          disposeHologram(loaded);
+          return;
+        }
+        active = loaded;
+        setModel(loaded);
+        readyRef.current?.(loaded.loadMs);
       })
-      .catch(() => {
-        if (!cancel) setMeshSample(null);
+      .catch((error: unknown) => {
+        console.error(error instanceof Error ? error.message : 'The presence mesh did not load.');
+        if (!cancel) setModel(null);
       });
     return () => {
       cancel = true;
+      setModel(null);
+      if (active) disposeHologram(active);
     };
   }, [tier]);
-  const sampled = meshSample ?? procedural;
+  const sampled = procedural;
   const headSample = useMemo(
     () => sliceFigure(sampled, (kind) => kind < figureKind.torso || kind === figureKind.hair),
     [sampled],
@@ -168,6 +181,12 @@ export function PresenceFigure({
   };
 
   useEffect(() => () => material.dispose(), [material]);
+  useLayoutEffect(() => {
+    if (!model) return;
+    const previous = model.shell.material;
+    model.shell.material = material;
+    if (previous !== material && !Array.isArray(previous)) previous.dispose();
+  }, [model, material]);
 
   useFrame((clock, dt) => {
     if (state === 'AWAKENING') awaken.current = Math.min(1, awaken.current + dt * 0.7);
@@ -185,9 +204,23 @@ export function PresenceFigure({
     uniforms.uGesture.value = pose.gesture;
     uniforms.uEnergy.value = energy;
     uniforms.uBrow.value = pose.brow;
-    uniforms.uOpacity.value = pose.opacity;
-    uniforms.uMesh.value = meshSample ? 1 : 0;
-    uniforms.uSize.value = meshSample ? (tier === 'high' ? 0.008 : tier === 'medium' ? 0.011 : 0.016) : tier === 'high' ? 0.01 : tier === 'medium' ? 0.014 : 0.022;
+    uniforms.uOpacity.value = model ? pose.opacity * 0.28 : pose.opacity;
+    uniforms.uMesh.value = model ? 1 : 0;
+    uniforms.uSize.value = model ? (tier === 'high' ? 0.0045 : tier === 'medium' ? 0.006 : 0.008) : tier === 'high' ? 0.01 : tier === 'medium' ? 0.014 : 0.022;
+    if (model) {
+      poseHologram(model, {
+        gazeX,
+        gazeY,
+        mouth: Math.max(pose.mouthBias, mouth),
+        blink: Math.max(pose.blinkBias, blink.current.closed),
+        brow: pose.brow,
+        gesture: pose.gesture,
+        expression,
+        opacity: pose.opacity,
+        time: clock.clock.elapsedTime,
+        reducedMotion,
+      });
+    }
     const sway = reducedMotion ? 0.08 : 1;
     if (head.current) {
       head.current.rotation.y = (Math.sin(clock.clock.elapsedTime * 0.31) * 0.08 + Math.sin(clock.clock.elapsedTime * 0.17) * 0.035 + gazeX * 0.18) * sway;
@@ -207,6 +240,15 @@ export function PresenceFigure({
       }
     }
   });
+
+  if (model) {
+    return (
+      <group>
+        <primitive object={model.group} />
+        <Cloud sample={model.ambient} material={material} />
+      </group>
+    );
+  }
 
   return (
     <group position={[0, 0.08, 0]}>

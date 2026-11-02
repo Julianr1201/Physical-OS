@@ -22,12 +22,10 @@ The microphone and the camera start off. Enabling either shows a visible indicat
 
 ## Performance
 
-The figure is one instanced billboard draw. The points are sampled from a MIT-licensed Microsoft character mesh (`apps/console/public/presence/female-adult-01.glb`, copyright 2020 Microsoft). The procedural sample remains the fallback if that file does not load. It is still points, not a video. High, medium, and low tiers change the particle count and the pixel ratio. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
-
-## Projection hardware
+The figure is a skinned mesh with a translucent holographic material, plus a fine particle shell and a sparse ambient cloud. The mesh is the MIT-licensed Microsoft character `apps/console/public/presence/female-adult-01.glb` (copyright 2020 Microsoft). It has facial bones and no morph targets, so the mouth, lids, brows, and eyes are bone rotations driven by the speech cue. The procedural point sample remains the fallback if that file does not load or its measured axes do not match the declared frame. High, medium, and low tiers change the shell density and the pixel ratio. The running page measures frames on that device and can step down. A low measurement wins over a high core count. This repository does not record a frame rate for a specific ARM television.
 
 ## Projection hardware
 
 A volumetric projector, light field, or lenticular panel is outside this software MVP. Do not describe that hardware as supported.
 
-The presence shows the active profession when one is activated at `/profiles`. The figure itself stays this point cloud.
+The presence shows the active profession when one is activated at `/profiles`. The same figure is used for every profession.

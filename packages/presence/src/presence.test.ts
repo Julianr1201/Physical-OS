@@ -3,23 +3,30 @@ import {
   absentProvider,
   acceptProvider,
   advanceBlink,
+  applyFrame,
   chooseTier,
   createBlink,
   defaultPrivacy,
+  extentMatchesUp,
+  femaleAdult01Axes,
   figureKind,
+  frameAvatar,
   gestureMouth,
   initialTurn,
   isEcho,
   lineForExecution,
   mouthFromBoundary,
   particleBudget,
+  presenceFocus,
   recordingIndicator,
   reduceTurn,
   replyFromInterpret,
   sampleFigure,
   setCameraGaze,
+  shellBudget,
   stepVad,
   visualFor,
+  visemeFromBoundary,
   createVad,
 } from './index.js';
 
@@ -203,6 +210,37 @@ describe('presence privacy and performance', () => {
     const held = stepVad(first, 0.1, 200);
     expect(held.active).toBe(true);
     expect(stepVad(held, 0.01, 260).active).toBe(false);
+  });
+});
+
+describe('avatar frame', () => {
+  it('turns the measured rocketbox axes to face the camera without mirroring', () => {
+    const center: [number, number, number] = [0, 0.2, 1.6];
+    const frame = frameAvatar(femaleAdult01Axes, center, presenceFocus);
+    const origin = applyFrame(frame, [0, 0, 0]);
+    const up = applyFrame(frame, [0, 0, 1]);
+    const face = applyFrame(frame, [0, 1, 0]);
+    const right = applyFrame(frame, [1, 0, 0]);
+    expect(up[1] - origin[1]).toBeCloseTo(1);
+    expect(face[2] - origin[2]).toBeCloseTo(1);
+    expect(right[0] - origin[0]).toBeCloseTo(-1);
+    const placed = applyFrame(frame, center);
+    expect(placed[0]).toBeCloseTo(presenceFocus[0]);
+    expect(placed[1]).toBeCloseTo(presenceFocus[1]);
+    expect(placed[2]).toBeCloseTo(presenceFocus[2]);
+    expect(extentMatchesUp([-0.61, -0.13, 0], [0.61, 0.25, 1.74], femaleAdult01Axes.up)).toBe(true);
+    expect(extentMatchesUp([-0.61, -0.13, 0], [0.61, 0.25, 1.74], [0, 1, 0])).toBe(false);
+  });
+
+  it('maps Spanish speech marks onto visemes and keeps a vowel more open than a consonant', () => {
+    expect(visemeFromBoundary('Hola', 1).viseme).toBe('O');
+    expect(visemeFromBoundary('México', 1).viseme).toBe('E');
+    expect(visemeFromBoundary('tú', 1).viseme).toBe('U');
+    expect(visemeFromBoundary('papá', 0).viseme).toBe('PP');
+    expect(visemeFromBoundary('café', 2).viseme).toBe('FF');
+    expect(mouthFromBoundary('hola', 1)).toBeGreaterThan(mouthFromBoundary('hola', 0));
+    expect(shellBudget('high')).toBeGreaterThan(shellBudget('medium'));
+    expect(shellBudget('medium')).toBeGreaterThan(shellBudget('low'));
   });
 });
 

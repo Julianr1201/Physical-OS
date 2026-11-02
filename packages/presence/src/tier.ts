@@ -16,6 +16,12 @@ export function particleBudget(tier: PerformanceTier): number {
   return 1400;
 }
 
+export function shellBudget(tier: PerformanceTier): number {
+  if (tier === 'high') return 700;
+  if (tier === 'medium') return 320;
+  return 120;
+}
+
 export function renderScale(tier: PerformanceTier): number {
   if (tier === 'high') return 1.5;
   if (tier === 'medium') return 1.25;

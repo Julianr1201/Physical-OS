@@ -118,12 +118,30 @@ export function advanceBlink(clock: BlinkClock, time: number, dt: number, forceC
   return { nextAt: time + gap, closed: 1 };
 }
 
+export type Viseme = 'sil' | 'PP' | 'FF' | 'aa' | 'E' | 'I' | 'O' | 'U' | 'etc';
+
+export interface SpeechCue {
+  viseme: Viseme;
+  mouth: number;
+  charIndex: number;
+}
+
+/** Maps one spoken character to a viseme. Spanish vowels keep their accent forms. */
+export function visemeFromBoundary(text: string, charIndex: number): SpeechCue {
+  const lower = (text[charIndex] ?? ' ').toLowerCase();
+  if ('aá'.includes(lower)) return { viseme: 'aa', mouth: 0.75, charIndex };
+  if ('eé'.includes(lower)) return { viseme: 'E', mouth: 0.75, charIndex };
+  if ('ií'.includes(lower)) return { viseme: 'I', mouth: 0.55, charIndex };
+  if ('oó'.includes(lower)) return { viseme: 'O', mouth: 0.7, charIndex };
+  if ('uúü'.includes(lower)) return { viseme: 'U', mouth: 0.45, charIndex };
+  if ('mpb'.includes(lower)) return { viseme: 'PP', mouth: 0.08, charIndex };
+  if ('fv'.includes(lower)) return { viseme: 'FF', mouth: 0.22, charIndex };
+  if (lower === ' ' || lower === '.' || lower === ',' || lower === '¿' || lower === '?') return { viseme: 'sil', mouth: 0.05, charIndex };
+  return { viseme: 'etc', mouth: 0.32, charIndex };
+}
+
 export function mouthFromBoundary(text: string, charIndex: number): number {
-  const ch = text[charIndex] ?? ' ';
-  const lower = ch.toLowerCase();
-  if ('aeiouáéíóúü'.includes(lower)) return 0.75;
-  if (lower === ' ' || lower === '.' || lower === ',') return 0.05;
-  return 0.32;
+  return visemeFromBoundary(text, charIndex).mouth;
 }
 
 /** Visual timing for a gesture preview. This does not synthesize audio. */

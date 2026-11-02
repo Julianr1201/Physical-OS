@@ -1,42 +1,19 @@
 'use client';
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { figureKind, type FigureSample } from '@physical-os/presence';
+import { figureKind, type FigureSample, type Vec3 } from '@physical-os/presence';
 import * as THREE from 'three';
 
-const modelUrl = '/presence/female-adult-01.glb';
-
-export function loadPresenceMesh(count: number): Promise<FigureSample> {
-  const loader = new GLTFLoader();
-  loader.setMeshoptDecoder(MeshoptDecoder);
-  return loader.loadAsync(modelUrl).then((gltf) => {
-    const meshes = findSkins(gltf.scene);
-    gltf.scene.updateMatrixWorld(true);
-    for (const mesh of meshes) mesh.skeleton.update();
-    return sampleSkinned(meshes, count);
-  });
-}
-
-function findSkins(root: THREE.Object3D): THREE.SkinnedMesh[] {
-  const found: THREE.SkinnedMesh[] = [];
-  root.traverse((object) => {
-    if ((object as THREE.SkinnedMesh).isSkinnedMesh) found.push(object as THREE.SkinnedMesh);
-  });
-  if (found.length === 0) throw new Error('The presence mesh has no skin.');
-  return found;
-}
-
-function sampleSkinned(meshes: THREE.SkinnedMesh[], count: number): FigureSample {
+export function sampleSkinnedSurface(meshes: THREE.SkinnedMesh[], count: number, up: Vec3): FigureSample {
+  if (count <= 0) return emptySample();
   const baked = meshes.map((mesh) => bakeMesh(mesh));
-  let maxY = Number.NEGATIVE_INFINITY;
+  let maxAlong = Number.NEGATIVE_INFINITY;
   for (const positions of baked) {
-    for (let index = 1; index < positions.length; index += 3) {
-      const y = positions[index] ?? 0;
-      if (y > maxY) maxY = y;
+    for (let index = 0; index < positions.length; index += 3) {
+      const along = alongOf(positions, index, up);
+      if (along > maxAlong) maxAlong = along;
     }
   }
-  const cutoff = maxY - 0.78;
+  const cutoff = maxAlong - 0.8;
   const triangles: number[] = [];
   let totalArea = 0;
   const a = new THREE.Vector3();
@@ -44,30 +21,27 @@ function sampleSkinned(meshes: THREE.SkinnedMesh[], count: number): FigureSample
   const c = new THREE.Vector3();
   const ab = new THREE.Vector3();
   const ac = new THREE.Vector3();
+  const normal = new THREE.Vector3();
   baked.forEach((positions, meshIndex) => {
     const mesh = meshes[meshIndex];
     if (!mesh) return;
     const index = mesh.geometry.index;
-    const vertexCount = positions.length / 3;
-    const triCount = index ? index.count / 3 : vertexCount / 3;
+    const triCount = index ? index.count / 3 : positions.length / 9;
     for (let tri = 0; tri < triCount; tri += 1) {
       readTriangle(positions, index, tri, a, b, c);
-      if ((a.y + b.y + c.y) / 3 < cutoff) continue;
+      const centroid = alongOfVector(a, up) + alongOfVector(b, up) + alongOfVector(c, up);
+      if (centroid / 3 < cutoff) continue;
       const area = ab.subVectors(b, a).cross(ac.subVectors(c, a)).length() * 0.5;
       if (area <= 0) continue;
       totalArea += area;
       triangles.push(totalArea, meshIndex, tri);
     }
   });
-  if (triangles.length === 0) throw new Error('The presence mesh produced no surface.');
+  if (triangles.length === 0) return emptySample();
   const random = mulberry32(0x504f53);
-  const points: Array<[number, number, number]> = [];
-  let minX = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let minYv = Number.POSITIVE_INFINITY;
-  let maxYv = Number.NEGATIVE_INFINITY;
-  let minZ = Number.POSITIVE_INFINITY;
-  let maxZ = Number.NEGATIVE_INFINITY;
+  const positions = new Float32Array(count * 3);
+  const kind = new Float32Array(count);
+  const side = new Float32Array(count);
   for (let n = 0; n < count; n += 1) {
     const pick = random() * totalArea;
     let lo = 0;
@@ -79,48 +53,83 @@ function sampleSkinned(meshes: THREE.SkinnedMesh[], count: number): FigureSample
     }
     const meshIndex = triangles[lo * 3 + 1] ?? 0;
     const tri = triangles[lo * 3 + 2] ?? 0;
-    const positions = baked[meshIndex];
+    const source = baked[meshIndex];
     const index = meshes[meshIndex]?.geometry.index ?? null;
-    if (!positions) continue;
-    readTriangle(positions, index, tri, a, b, c);
+    if (!source) continue;
+    readTriangle(source, index, tri, a, b, c);
+    ab.subVectors(b, a);
+    ac.subVectors(c, a);
+    normal.crossVectors(ab, ac).normalize();
     const r1 = Math.sqrt(random());
     const r2 = random();
-    const point: [number, number, number] = [
-      a.x * (1 - r1) + b.x * r1 * (1 - r2) + c.x * r1 * r2,
-      a.y * (1 - r1) + b.y * r1 * (1 - r2) + c.y * r1 * r2,
-      a.z * (1 - r1) + b.z * r1 * (1 - r2) + c.z * r1 * r2,
-    ];
-    points.push(point);
-    minX = Math.min(minX, point[0]);
-    maxX = Math.max(maxX, point[0]);
-    minYv = Math.min(minYv, point[1]);
-    maxYv = Math.max(maxYv, point[1]);
-    minZ = Math.min(minZ, point[2]);
-    maxZ = Math.max(maxZ, point[2]);
+    const x = a.x * (1 - r1) + b.x * r1 * (1 - r2) + c.x * r1 * r2;
+    const y = a.y * (1 - r1) + b.y * r1 * (1 - r2) + c.y * r1 * r2;
+    const z = a.z * (1 - r1) + b.z * r1 * (1 - r2) + c.z * r1 * r2;
+    positions[n * 3] = x + normal.x * 0.006;
+    positions[n * 3 + 1] = y + normal.y * 0.006;
+    positions[n * 3 + 2] = z + normal.z * 0.006;
+    kind[n] = figureKind.head;
   }
-  const height = Math.max(0.001, maxYv - minYv);
-  const scale = 0.95 / height;
-  const midX = (minX + maxX) / 2;
-  const midZ = (minZ + maxZ) / 2;
-  const anchorY = maxYv - height * 0.22;
-  const ring = Math.round(count * 0.04);
-  const total = points.length + ring;
+  return { count, positions, kind, side };
+}
+
+export function headCenter(meshes: THREE.SkinnedMesh[], up: Vec3): { center: Vec3; min: Vec3; max: Vec3 } {
+  const min: Vec3 = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY];
+  const max: Vec3 = [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY];
+  const points: number[] = [];
+  const vertex = new THREE.Vector3();
+  for (const mesh of meshes) {
+    const position = mesh.geometry.attributes.position;
+    if (!position) continue;
+    for (let index = 0; index < position.count; index += 1) {
+      vertex.fromBufferAttribute(position, index);
+      mesh.applyBoneTransform(index, vertex);
+      points.push(vertex.x, vertex.y, vertex.z);
+      min[0] = Math.min(min[0], vertex.x);
+      min[1] = Math.min(min[1], vertex.y);
+      min[2] = Math.min(min[2], vertex.z);
+      max[0] = Math.max(max[0], vertex.x);
+      max[1] = Math.max(max[1], vertex.y);
+      max[2] = Math.max(max[2], vertex.z);
+    }
+  }
+  let maxAlong = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < points.length; index += 3) maxAlong = Math.max(maxAlong, alongOf(points, index, up));
+  let count = 0;
+  const center: Vec3 = [0, 0, 0];
+  for (let index = 0; index < points.length; index += 3) {
+    const along = alongOf(points, index, up);
+    if (along < maxAlong - 0.2 || along > maxAlong - 0.07) continue;
+    center[0] += points[index] ?? 0;
+    center[1] += points[index + 1] ?? 0;
+    center[2] += points[index + 2] ?? 0;
+    count += 1;
+  }
+  if (count === 0) return { center: [0, 0, 0], min, max };
+  return { center: [center[0] / count, center[1] / count, center[2] / count], min, max };
+}
+
+export function ambientMist(): FigureSample {
+  const mist = 140;
+  const ring = 72;
+  const total = mist + ring;
   const positions = new Float32Array(total * 3);
   const kind = new Float32Array(total);
   const side = new Float32Array(total);
-  for (let i = 0; i < points.length; i += 1) {
-    const point = points[i];
-    if (!point) continue;
-    positions[i * 3] = (point[0] - midX) * scale;
-    positions[i * 3 + 1] = (point[1] - anchorY) * scale + 0.33;
-    positions[i * 3 + 2] = (point[2] - midZ) * scale;
-    kind[i] = figureKind.head;
+  const random = mulberry32(0xA11CE);
+  for (let index = 0; index < mist; index += 1) {
+    const angle = random() * Math.PI * 2;
+    const radius = 0.22 + random() * 0.38;
+    positions[index * 3] = Math.cos(angle) * radius;
+    positions[index * 3 + 1] = 0.08 + random() * 0.52;
+    positions[index * 3 + 2] = (random() - 0.5) * 0.28;
+    kind[index] = figureKind.head;
   }
-  for (let i = 0; i < ring; i += 1) {
-    const cursor = points.length + i;
-    const angle = (i / ring) * Math.PI * 2;
-    positions[cursor * 3] = Math.cos(angle) * 0.36;
-    positions[cursor * 3 + 1] = -0.12;
+  for (let index = 0; index < ring; index += 1) {
+    const cursor = mist + index;
+    const angle = (index / ring) * Math.PI * 2;
+    positions[cursor * 3] = Math.cos(angle) * 0.42;
+    positions[cursor * 3 + 1] = -0.16;
     positions[cursor * 3 + 2] = Math.sin(angle) * 0.16;
     kind[cursor] = figureKind.ring;
   }
@@ -129,17 +138,25 @@ function sampleSkinned(meshes: THREE.SkinnedMesh[], count: number): FigureSample
 
 function bakeMesh(mesh: THREE.SkinnedMesh): Float32Array {
   const source = mesh.geometry.attributes.position;
-  if (!source) throw new Error('The presence mesh has no positions.');
+  if (!source) return new Float32Array();
   const baked = new Float32Array(source.count * 3);
   const vertex = new THREE.Vector3();
-  for (let i = 0; i < source.count; i += 1) {
-    vertex.fromBufferAttribute(source, i);
-    mesh.applyBoneTransform(i, vertex);
-    baked[i * 3] = vertex.x;
-    baked[i * 3 + 1] = vertex.z;
-    baked[i * 3 + 2] = vertex.y;
+  for (let index = 0; index < source.count; index += 1) {
+    vertex.fromBufferAttribute(source, index);
+    mesh.applyBoneTransform(index, vertex);
+    baked[index * 3] = vertex.x;
+    baked[index * 3 + 1] = vertex.y;
+    baked[index * 3 + 2] = vertex.z;
   }
   return baked;
+}
+
+function alongOf(values: ArrayLike<number>, index: number, up: Vec3): number {
+  return (values[index] ?? 0) * up[0] + (values[index + 1] ?? 0) * up[1] + (values[index + 2] ?? 0) * up[2];
+}
+
+function alongOfVector(point: THREE.Vector3, up: Vec3): number {
+  return point.x * up[0] + point.y * up[1] + point.z * up[2];
 }
 
 function readTriangle(
@@ -153,13 +170,13 @@ function readTriangle(
   const ia = index ? index.getX(tri * 3) : tri * 3;
   const ib = index ? index.getX(tri * 3 + 1) : tri * 3 + 1;
   const ic = index ? index.getX(tri * 3 + 2) : tri * 3 + 2;
-  read(baked, ia, a);
-  read(baked, ib, b);
-  read(baked, ic, c);
+  a.set(baked[ia * 3] ?? 0, baked[ia * 3 + 1] ?? 0, baked[ia * 3 + 2] ?? 0);
+  b.set(baked[ib * 3] ?? 0, baked[ib * 3 + 1] ?? 0, baked[ib * 3 + 2] ?? 0);
+  c.set(baked[ic * 3] ?? 0, baked[ic * 3 + 1] ?? 0, baked[ic * 3 + 2] ?? 0);
 }
 
-function read(baked: Float32Array, index: number, target: THREE.Vector3): void {
-  target.set(baked[index * 3] ?? 0, baked[index * 3 + 1] ?? 0, baked[index * 3 + 2] ?? 0);
+function emptySample(): FigureSample {
+  return { count: 0, positions: new Float32Array(), kind: new Float32Array(), side: new Float32Array() };
 }
 
 function mulberry32(seed: number): () => number {

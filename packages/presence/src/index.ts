@@ -11,7 +11,8 @@ export {
 } from './privacy.js';
 export { absentProvider, acceptProvider, type ProviderSlot } from './providers.js';
 export { presenceStates, expressions, type PresenceState, type ExpressionName } from './state.js';
-export { chooseTier, particleBudget, renderScale, type PerformanceTier } from './tier.js';
+export { chooseTier, particleBudget, renderScale, shellBudget, type PerformanceTier } from './tier.js';
+export { frameAvatar, applyFrame, extentMatchesUp, femaleAdult01Axes, presenceFocus, type AvatarAxes, type AvatarFrame, type Vec3 } from './avatar-frame.js';
 export {
   initialTurn,
   reduceTurn,
@@ -27,7 +28,10 @@ export {
   createBlink,
   advanceBlink,
   mouthFromBoundary,
+  visemeFromBoundary,
   gestureMouth,
+  type SpeechCue,
+  type Viseme,
   type VisualPose,
   type BlinkClock,
 } from './visual.js';

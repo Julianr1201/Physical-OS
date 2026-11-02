@@ -12,7 +12,7 @@ import {
   initialTurn,
   isEcho,
   lineForExecution,
-  mouthFromBoundary,
+  visemeFromBoundary,
   recordingIndicator,
   reduceTurn,
   replyFromInterpret,
@@ -116,7 +116,7 @@ export function PresenceScreen() {
     abortRef.current = controller;
     speakAt.current = performance.now();
     void speakBrowser(line, frame.locale === 'es' ? 'es-MX' : 'en-US', controller.signal, (index) => {
-      setMouth(mouthFromBoundary(line, index));
+      setMouth(visemeFromBoundary(line, index).mouth);
     }).then((result) => {
       if (result === 'ended') dispatch({ type: 'speech_ended', generation });
       setMouth(0);
